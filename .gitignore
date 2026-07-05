@@ -1,0 +1,30 @@
+# .NET
+bin/
+obj/
+out/
+*.user
+*.suo
+*.userprefs
+
+# VS / VS Code
+.vs/
+.vscode/
+*.swp
+*.swo
+
+# Rider
+.idea/
+
+# NuGet
+*.nupkg
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+appsettings.Local.json
+appsettings.Production.json

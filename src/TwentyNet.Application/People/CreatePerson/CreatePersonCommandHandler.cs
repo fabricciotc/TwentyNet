@@ -1,0 +1,37 @@
+using AutoMapper;
+using MediatR;
+using TwentyNet.Domain.Entities;
+using TwentyNet.Domain.Interfaces;
+using TwentyNet.Domain.ValueObjects;
+
+namespace TwentyNet.Application.People.CreatePerson;
+
+public sealed class CreatePersonCommandHandler : IRequestHandler<CreatePersonCommand, PersonDto>
+{
+    private readonly IRepository<Person> _repository;
+    private readonly IMapper _mapper;
+
+    public CreatePersonCommandHandler(IRepository<Person> repository, IMapper mapper)
+    {
+        _repository = repository;
+        _mapper = mapper;
+    }
+
+    public async Task<PersonDto> Handle(CreatePersonCommand request, CancellationToken cancellationToken)
+    {
+        var person = new Person
+        {
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            Email = string.IsNullOrWhiteSpace(request.Email) ? null : new Email(request.Email),
+            Phone = string.IsNullOrWhiteSpace(request.Phone) ? null : new PhoneNumber(request.Phone),
+            CompanyId = request.CompanyId,
+            WorkspaceId = request.WorkspaceId
+        };
+
+        await _repository.AddAsync(person, cancellationToken);
+        await _repository.SaveChangesAsync(cancellationToken);
+
+        return _mapper.Map<PersonDto>(person);
+    }
+}
