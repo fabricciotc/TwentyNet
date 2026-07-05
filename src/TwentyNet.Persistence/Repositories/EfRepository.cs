@@ -31,6 +31,29 @@ public sealed class EfRepository<T> : IRepository<T> where T : BaseEntity
         return await query.ToListAsync(cancellationToken);
     }
 
+    public IQueryable<T> AsQueryable()
+        => _set.AsNoTracking().AsQueryable();
+
+    public async Task<IReadOnlyList<T>> ToListAsync(IQueryable<T> query, CancellationToken cancellationToken = default)
+    {
+        return await query.ToListAsync(cancellationToken);
+    }
+
+    public Task<int> CountAsync(IQueryable<T> query, CancellationToken cancellationToken = default)
+        => query.CountAsync(cancellationToken);
+
+    public Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null, CancellationToken cancellationToken = default)
+    {
+        var query = _set.AsNoTracking().AsQueryable();
+
+        if (predicate is not null)
+        {
+            query = query.Where(predicate);
+        }
+
+        return query.CountAsync(cancellationToken);
+    }
+
     public async Task<T> AddAsync(T entity, CancellationToken cancellationToken = default)
     {
         await _set.AddAsync(entity, cancellationToken);

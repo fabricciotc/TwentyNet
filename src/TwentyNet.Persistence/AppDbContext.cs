@@ -25,6 +25,9 @@ public sealed class AppDbContext : DbContext, IUnitOfWork
     public DbSet<ConnectedAccount> ConnectedAccounts => Set<ConnectedAccount>();
     public DbSet<MessageChannel> MessageChannels => Set<MessageChannel>();
     public DbSet<CalendarChannel> CalendarChannels => Set<CalendarChannel>();
+    public DbSet<View> Views => Set<View>();
+    public DbSet<ViewFilter> ViewFilters => Set<ViewFilter>();
+    public DbSet<ViewSort> ViewSorts => Set<ViewSort>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
