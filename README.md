@@ -31,7 +31,8 @@ TwentyNet.sln
 
 - **Workspace**: contenedor principal de datos.
 - **User**: usuario con email, nombre, apellido, hash de contraseña y estado.
-- **UserWorkspaceMembership**: relación muchos-a-muchos entre usuarios y workspaces con rol.
+- **UserWorkspaceMembership**: relación muchos-a-muchos entre usuarios y workspaces con rol (`Member` o `Admin`).
+- **WorkspaceInvite**: invitación para unirse a un workspace con rol asignado, token único y expiración.
 - **RefreshToken**: tokens de refresco rotatorios, revocables y con expiración.
 - **Company**: empresa con nombre, dominio y dirección.
 - **Person**: contacto con nombre, email, teléfono y relación opcional con una empresa.
@@ -92,6 +93,7 @@ dotnet ef database update --project src/TwentyNet.Persistence --startup-project 
 ```
 
 La migración `AddAuth` añade las tablas y columnas necesarias para autenticación (usuarios, memberships, refresh tokens).
+La migración `AddWorkspaceInvitesAndRoles` añade la entidad `WorkspaceInvite`, convierte el rol de membership a enum mapeado como string y actualiza los tokens JWT para incluir el claim `role`.
 
 ## Ejecutar
 
@@ -110,9 +112,10 @@ La API usa **JWT Bearer**. Los endpoints de `Companies` y `People` requieren aut
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| POST | `/api/auth/register` | Crear usuario, workspace y membership |
+| POST | `/api/auth/register` | Crear usuario, workspace y membership (rol `Admin`) |
 | POST | `/api/auth/login` | Iniciar sesión en un workspace |
 | POST | `/api/auth/refresh` | Rotar tokens usando refresh token |
+| POST | `/api/auth/switch-workspace` | Cambiar al contexto de otro workspace del usuario |
 | POST | `/api/auth/logout` | Revocar refresh token |
 
 ### Flujo típico
@@ -158,13 +161,67 @@ curl -X POST https://localhost:7001/api/auth/refresh \
   -d '{ "refreshToken": "REFRESH_TOKEN_AQUI" }'
 ```
 
-5. Logout:
+5. Switch workspace (cambiar de workspace manteniendo la sesión):
+
+```bash
+curl -X POST https://localhost:7001/api/auth/switch-workspace \
+  -H "Authorization: Bearer ACCESS_TOKEN_AQUI" \
+  -H "Content-Type: application/json" \
+  -d '{ "workspaceId": "OTRO_WORKSPACE_ID_AQUI" }'
+```
+
+6. Logout:
 
 ```bash
 curl -X POST https://localhost:7001/api/auth/logout \
   -H "Content-Type: application/json" \
   -d '{ "refreshToken": "REFRESH_TOKEN_AQUI" }'
 ```
+
+## Workspaces, members e invitaciones
+
+Los endpoints de workspace requieren autenticación. Las operaciones administrativas (invitar, cambiar rol, remover) requieren el claim `role` == `Admin` en el JWT.
+
+### Workspaces
+
+| Método | Ruta | Descripción | Política |
+|--------|------|-------------|----------|
+| GET | `/api/workspaces` | Listar workspaces a los que pertenece el usuario autenticado | `RequireMember` |
+
+### Members
+
+| Método | Ruta | Descripción | Política |
+|--------|------|-------------|----------|
+| GET | `/api/workspaces/{id}/members` | Listar miembros del workspace | `RequireMember` |
+| PUT | `/api/workspaces/{id}/members/{userId}/role` | Cambiar rol de un miembro | `RequireAdmin` |
+| DELETE | `/api/workspaces/{id}/members/{userId}` | Remover miembro del workspace | `RequireAdmin` |
+
+**Ejemplo PUT `/api/workspaces/{id}/members/{userId}/role`:**
+
+```json
+{
+  "role": "Admin"
+}
+```
+
+### Invites
+
+| Método | Ruta | Descripción | Política |
+|--------|------|-------------|----------|
+| POST | `/api/workspaces/{id}/invites` | Invitar a un usuario por email con un rol | `RequireAdmin` |
+| POST | `/api/invites/{token}/accept` | Aceptar invitación | `RequireMember` |
+| POST | `/api/invites/{token}/reject` | Rechazar invitación | `RequireMember` |
+
+**Ejemplo POST `/api/workspaces/{id}/invites`:**
+
+```json
+{
+  "email": "newuser@example.com",
+  "role": "Member"
+}
+```
+
+> Nota: en esta fase MVP no se envía el email real. El handler logea que se enviaría el correo y devuelve el token de invitación.
 
 ## Endpoints protegidos
 
