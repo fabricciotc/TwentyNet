@@ -3,12 +3,16 @@ using TwentyNet.Application.Companies;
 using TwentyNet.Application.ConnectedAccounts;
 using TwentyNet.Application.Files;
 using TwentyNet.Application.People;
+using TwentyNet.Application.Views;
 using TwentyNet.Application.Webhooks;
 using TwentyNet.Application.Workspaces;
 using CompanyEntity = TwentyNet.Domain.Entities.Company;
 using ConnectedAccountEntity = TwentyNet.Domain.Entities.ConnectedAccount;
 using FileEntity = TwentyNet.Domain.Entities.File;
 using PersonEntity = TwentyNet.Domain.Entities.Person;
+using ViewEntity = TwentyNet.Domain.Entities.View;
+using ViewFilterEntity = TwentyNet.Domain.Entities.ViewFilter;
+using ViewSortEntity = TwentyNet.Domain.Entities.ViewSort;
 using WebhookEntity = TwentyNet.Domain.Entities.Webhook;
 using WorkspaceInviteEntity = TwentyNet.Domain.Entities.WorkspaceInvite;
 
@@ -26,5 +30,8 @@ public sealed class ApplicationProfile : Profile
         CreateMap<WebhookEntity, WebhookDto>();
         CreateMap<ConnectedAccountEntity, ConnectedAccountDto>();
         CreateMap<WorkspaceInviteEntity, WorkspaceInviteDto>();
+        CreateMap<ViewEntity, ViewDto>();
+        CreateMap<ViewFilterEntity, ViewFilterDto>();
+        CreateMap<ViewSortEntity, ViewSortDto>();
     }
 }
