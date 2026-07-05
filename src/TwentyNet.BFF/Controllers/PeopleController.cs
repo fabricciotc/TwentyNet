@@ -2,11 +2,14 @@ using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TwentyNet.Application.Files.AttachFileToPerson;
+using TwentyNet.Application.Files.ListPersonFiles;
 using TwentyNet.Application.People.CreatePerson;
 using TwentyNet.Application.People.DeletePerson;
 using TwentyNet.Application.People.GetPersonById;
 using TwentyNet.Application.People.ListPeople;
 using TwentyNet.Application.People.UpdatePerson;
+using TwentyNet.Contracts.Files;
 using TwentyNet.Contracts.People;
 
 namespace TwentyNet.BFF.Controllers;
@@ -74,5 +77,19 @@ public sealed class PeopleController : ControllerBase
     {
         await _sender.Send(new DeletePersonCommand(id), cancellationToken);
         return NoContent();
+    }
+
+    [HttpPost("{id:guid}/attachments")]
+    public async Task<IActionResult> AttachFile(Guid id, [FromBody] AttachFileRequest request, CancellationToken cancellationToken)
+    {
+        await _sender.Send(new AttachFileToPersonCommand(id, request.FileId), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpGet("{id:guid}/attachments")]
+    public async Task<ActionResult<IReadOnlyList<FileResponse>>> ListFiles(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new ListPersonFilesQuery(id), cancellationToken);
+        return Ok(_mapper.Map<IReadOnlyList<FileResponse>>(result));
     }
 }

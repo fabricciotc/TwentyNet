@@ -10,4 +10,5 @@ public sealed class Company : BaseEntity
     public Guid WorkspaceId { get; set; }
     public Workspace Workspace { get; set; } = null!;
     public ICollection<Person> People { get; init; } = new List<Person>();
+    public ICollection<File> Attachments { get; init; } = new List<File>();
 }

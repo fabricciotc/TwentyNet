@@ -28,3 +28,6 @@ Thumbs.db
 # Secrets
 appsettings.Local.json
 appsettings.Production.json
+
+# Local file storage
+storage/

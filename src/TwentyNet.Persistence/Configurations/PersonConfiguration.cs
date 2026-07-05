@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TwentyNet.Domain.Entities;
 using TwentyNet.Domain.ValueObjects;
+using FileEntity = TwentyNet.Domain.Entities.File;
 
 namespace TwentyNet.Persistence.Configurations;
 
@@ -28,5 +29,10 @@ public sealed class PersonConfiguration : IEntityTypeConfiguration<Person>
 
         builder.HasIndex(x => x.WorkspaceId);
         builder.HasIndex(x => x.CompanyId);
+
+        builder.HasMany(x => x.Attachments)
+            .WithOne(f => f.Person)
+            .HasForeignKey(f => f.PersonId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

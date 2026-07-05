@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TwentyNet.Domain.Entities;
+using FileEntity = TwentyNet.Domain.Entities.File;
 
 namespace TwentyNet.Persistence.Configurations;
 
@@ -20,6 +21,11 @@ public sealed class CompanyConfiguration : IEntityTypeConfiguration<Company>
         builder.HasMany(x => x.People)
             .WithOne(p => p.Company)
             .HasForeignKey(p => p.CompanyId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasMany(x => x.Attachments)
+            .WithOne(f => f.Company)
+            .HasForeignKey(f => f.CompanyId)
             .OnDelete(DeleteBehavior.SetNull);
     }
 }

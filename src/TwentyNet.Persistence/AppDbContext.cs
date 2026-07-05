@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TwentyNet.Domain.Common;
 using TwentyNet.Domain.Entities;
 using TwentyNet.Domain.Interfaces;
+using FileEntity = TwentyNet.Domain.Entities.File;
 
 namespace TwentyNet.Persistence;
 
@@ -18,6 +19,7 @@ public sealed class AppDbContext : DbContext, IUnitOfWork
     public DbSet<UserWorkspaceMembership> UserWorkspaceMemberships => Set<UserWorkspaceMembership>();
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<Person> People => Set<Person>();
+    public DbSet<FileEntity> Files => Set<FileEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

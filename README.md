@@ -35,6 +35,7 @@ TwentyNet.sln
 - **RefreshToken**: tokens de refresco rotatorios, revocables y con expiración.
 - **Company**: empresa con nombre, dominio y dirección.
 - **Person**: contacto con nombre, email, teléfono y relación opcional con una empresa.
+- **File**: archivo con nombre, mime type, tamaño, carpeta (`Attachment`, `Avatar`, `EmailAttachment`), storage key, workspace y estado (`Pending`/`Uploaded`). Soporta soft delete y puede asociarse a `Person` o `Company` como attachment.
 
 ## Requisitos
 
@@ -66,6 +67,8 @@ Edita `src/TwentyNet.BFF/appsettings.json` (o `appsettings.Development.json`) co
 ```
 
 > **Importante:** cambia `Jwt:SecretKey` en producción por un valor aleatorio de al menos 32 caracteres. No incluyas secrets en el repositorio. Usa variables de entorno o `appsettings.Local.json` (ignorado por `.gitignore`).
+>
+> Para almacenamiento local, el directorio por defecto es `./storage` (ignorado por `.gitignore`).
 
 ## Migrations
 
@@ -196,6 +199,113 @@ curl -X POST https://localhost:7001/api/auth/logout \
   "phone": "+1 555 1234",
   "companyId": null
 }
+```
+
+### Files (manejo de archivos)
+
+La API soporta dos backends de almacenamiento mediante `IStorageDriver`:
+
+- **Local**: guarda archivos en disco bajo `Storage:LocalPath`.
+- **S3**: usa `AWSSDK.S3`, compatible con AWS S3 y MinIO (configurando `S3Endpoint` y `S3ForcePathStyle=true`).
+
+#### Configuración
+
+Local (por defecto en `appsettings.json`):
+
+```json
+{
+  "Storage": {
+    "Provider": "Local",
+    "LocalPath": "./storage"
+  }
+}
+```
+
+S3 / MinIO:
+
+```json
+{
+  "Storage": {
+    "Provider": "S3",
+    "S3Bucket": "twentynet",
+    "S3Region": "us-east-1",
+    "S3AccessKey": "YOUR_ACCESS_KEY",
+    "S3SecretKey": "YOUR_SECRET_KEY",
+    "S3Endpoint": "https://minio.example.com",
+    "S3ForcePathStyle": true
+  }
+}
+```
+
+> No incluyas credenciales S3 en el repositorio. Usa variables de entorno o `appsettings.Local.json`.
+
+#### Endpoints de archivos
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/files` | Crear registro de archivo pendiente y obtener URL de upload |
+| PUT | `/api/files/{id}/content` | Subir contenido del archivo (usado por el driver Local) |
+| PATCH | `/api/files/{id}/complete` | Marcar archivo como `Uploaded` |
+| GET | `/api/files/{id}/download` | Descargar archivo (redirecciona a URL presigned S3 o stream local) |
+| DELETE | `/api/files/{id}` | Soft delete del archivo y eliminación del storage |
+
+#### Adjuntos en People / Companies
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/people/{id}/attachments` | Asociar un archivo a una persona |
+| GET | `/api/people/{id}/attachments` | Listar archivos adjuntos de una persona |
+| POST | `/api/companies/{id}/attachments` | Asociar un archivo a una empresa |
+| GET | `/api/companies/{id}/attachments` | Listar archivos adjuntos de una empresa |
+
+#### Ejemplo de upload con driver Local
+
+1. Crear el registro:
+
+```bash
+curl -X POST https://localhost:7001/api/files \
+  -H "Authorization: Bearer ACCESS_TOKEN_AQUI" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "report.pdf",
+    "mimeType": "application/pdf",
+    "size": 1024,
+    "folder": "Attachment"
+  }'
+```
+
+Respuesta:
+
+```json
+{
+  "fileId": "FILE_ID_AQUI",
+  "uploadUrl": "/api/files/FILE_ID_AQUI/content",
+  "storageKey": "WORKSPACE_ID/attachment/FILE_ID-report.pdf"
+}
+```
+
+2. Subir el contenido:
+
+```bash
+curl -X PUT "https://localhost:7001/api/files/FILE_ID_AQUI/content" \
+  -H "Authorization: Bearer ACCESS_TOKEN_AQUI" \
+  -F "file=@report.pdf"
+```
+
+3. Completar el upload:
+
+```bash
+curl -X PATCH "https://localhost:7001/api/files/FILE_ID_AQUI/complete" \
+  -H "Authorization: Bearer ACCESS_TOKEN_AQUI"
+```
+
+4. Asociar a una persona:
+
+```bash
+curl -X POST "https://localhost:7001/api/people/PERSON_ID_AQUI/attachments" \
+  -H "Authorization: Bearer ACCESS_TOKEN_AQUI" \
+  -H "Content-Type: application/json" \
+  -d '{ "fileId": "FILE_ID_AQUI" }'
 ```
 
 ## Tests

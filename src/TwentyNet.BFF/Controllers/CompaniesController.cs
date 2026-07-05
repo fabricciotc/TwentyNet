@@ -7,7 +7,10 @@ using TwentyNet.Application.Companies.DeleteCompany;
 using TwentyNet.Application.Companies.GetCompanyById;
 using TwentyNet.Application.Companies.ListCompanies;
 using TwentyNet.Application.Companies.UpdateCompany;
+using TwentyNet.Application.Files.AttachFileToCompany;
+using TwentyNet.Application.Files.ListCompanyFiles;
 using TwentyNet.Contracts.Companies;
+using TwentyNet.Contracts.Files;
 
 namespace TwentyNet.BFF.Controllers;
 
@@ -61,5 +64,19 @@ public sealed class CompaniesController : ControllerBase
     {
         await _sender.Send(new DeleteCompanyCommand(id), cancellationToken);
         return NoContent();
+    }
+
+    [HttpPost("{id:guid}/attachments")]
+    public async Task<IActionResult> AttachFile(Guid id, [FromBody] AttachFileRequest request, CancellationToken cancellationToken)
+    {
+        await _sender.Send(new AttachFileToCompanyCommand(id, request.FileId), cancellationToken);
+        return NoContent();
+    }
+
+    [HttpGet("{id:guid}/attachments")]
+    public async Task<ActionResult<IReadOnlyList<FileResponse>>> ListFiles(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new ListCompanyFilesQuery(id), cancellationToken);
+        return Ok(_mapper.Map<IReadOnlyList<FileResponse>>(result));
     }
 }
