@@ -1,4 +1,5 @@
 using TwentyNet.Domain.Common;
+using TwentyNet.Domain.Enums;
 
 namespace TwentyNet.Domain.Entities;
 
@@ -8,5 +9,5 @@ public sealed class UserWorkspaceMembership : BaseEntity
     public User User { get; set; } = null!;
     public Guid WorkspaceId { get; set; }
     public Workspace Workspace { get; set; } = null!;
-    public string Role { get; set; } = "Member";
+    public WorkspaceRole Role { get; set; } = WorkspaceRole.Member;
 }
