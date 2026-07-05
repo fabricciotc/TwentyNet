@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using TwentyNet.BFF.Options;
+using TwentyNet.Domain.Enums;
 using TwentyNet.Domain.Interfaces;
 
 namespace TwentyNet.BFF.Services;
@@ -18,7 +19,7 @@ public sealed class TokenService : ITokenService
         _options = options.Value;
     }
 
-    public string GenerateAccessToken(Guid userId, Guid workspaceId)
+    public string GenerateAccessToken(Guid userId, Guid workspaceId, WorkspaceRole role)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.SecretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -27,6 +28,7 @@ public sealed class TokenService : ITokenService
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim("workspace_id", workspaceId.ToString()),
+            new Claim("role", role.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 

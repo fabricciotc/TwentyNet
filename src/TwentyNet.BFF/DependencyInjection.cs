@@ -3,6 +3,7 @@ using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -10,6 +11,7 @@ using TwentyNet.Application.Webhooks;
 using TwentyNet.BFF.Hubs;
 using TwentyNet.BFF.Options;
 using TwentyNet.BFF.Services;
+using TwentyNet.Domain.Enums;
 using TwentyNet.Domain.Interfaces;
 using TwentyNet.Persistence.Options;
 
@@ -57,7 +59,16 @@ public static class DependencyInjection
                 };
             });
 
-        services.AddAuthorization();
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("RequireAdmin", policy =>
+                policy.RequireAuthenticatedUser()
+                    .RequireClaim("role", WorkspaceRole.Admin.ToString()));
+
+            options.AddPolicy("RequireMember", policy =>
+                policy.RequireAuthenticatedUser()
+                    .RequireClaim("role", WorkspaceRole.Admin.ToString(), WorkspaceRole.Member.ToString()));
+        });
         services.AddHttpContextAccessor();
         services.AddScoped<IAuthContext, CurrentUserService>();
         services.AddScoped<ITokenService, TokenService>();

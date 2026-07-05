@@ -15,7 +15,7 @@ using TwentyNet.Contracts.Files;
 namespace TwentyNet.BFF.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Policy = "RequireMember")]
 [Route("api/companies")]
 public sealed class CompaniesController : ControllerBase
 {

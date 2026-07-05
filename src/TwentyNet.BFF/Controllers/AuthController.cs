@@ -1,10 +1,12 @@
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TwentyNet.Application.Auth;
 using TwentyNet.Application.Auth.LoginUser;
 using TwentyNet.Application.Auth.LogoutUser;
-using TwentyNet.Application.Auth.RotateToken;
 using TwentyNet.Application.Auth.RegisterUser;
+using TwentyNet.Application.Auth.RotateToken;
+using TwentyNet.Application.Auth.SwitchWorkspace;
 
 namespace TwentyNet.BFF.Controllers;
 
@@ -41,6 +43,16 @@ public sealed class AuthController : ControllerBase
     [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<AuthResponse>> Refresh([FromBody] RefreshTokenCommand command, CancellationToken cancellationToken)
+    {
+        var response = await _sender.Send(command, cancellationToken);
+        return Ok(response);
+    }
+
+    [HttpPost("switch-workspace")]
+    [Authorize]
+    [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<AuthResponse>> SwitchWorkspace([FromBody] SwitchWorkspaceCommand command, CancellationToken cancellationToken)
     {
         var response = await _sender.Send(command, cancellationToken);
         return Ok(response);

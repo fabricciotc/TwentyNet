@@ -15,7 +15,7 @@ using TwentyNet.Contracts.People;
 namespace TwentyNet.BFF.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Policy = "RequireMember")]
 [Route("api/people")]
 public sealed class PeopleController : ControllerBase
 {
