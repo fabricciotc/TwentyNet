@@ -2,4 +2,4 @@ using MediatR;
 
 namespace TwentyNet.Application.Companies.ListCompanies;
 
-public sealed record ListCompaniesQuery(Guid WorkspaceId) : IRequest<IReadOnlyList<CompanyDto>>;
+public sealed record ListCompaniesQuery : IRequest<IReadOnlyList<CompanyDto>>;

@@ -16,7 +16,5 @@ public sealed class CreatePersonCommandValidator : AbstractValidator<CreatePerso
         RuleFor(x => x.Phone)
             .MaximumLength(50)
             .When(x => !string.IsNullOrWhiteSpace(x.Phone));
-
-        RuleFor(x => x.WorkspaceId).NotEmpty();
     }
 }

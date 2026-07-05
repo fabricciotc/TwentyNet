@@ -7,5 +7,4 @@ public sealed record CreatePersonCommand(
     string LastName,
     string? Email,
     string? Phone,
-    Guid? CompanyId,
-    Guid WorkspaceId) : IRequest<PersonDto>;
+    Guid? CompanyId) : IRequest<PersonDto>;

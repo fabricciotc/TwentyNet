@@ -1,5 +1,6 @@
 using AutoMapper;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TwentyNet.Application.People.CreatePerson;
 using TwentyNet.Application.People.DeletePerson;
@@ -11,6 +12,7 @@ using TwentyNet.Contracts.People;
 namespace TwentyNet.BFF.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/people")]
 public sealed class PeopleController : ControllerBase
 {
@@ -24,9 +26,9 @@ public sealed class PeopleController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<PersonResponse>>> List([FromQuery] Guid workspaceId, CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyList<PersonResponse>>> List(CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(new ListPeopleQuery(workspaceId), cancellationToken);
+        var result = await _sender.Send(new ListPeopleQuery(), cancellationToken);
         return Ok(_mapper.Map<IReadOnlyList<PersonResponse>>(result));
     }
 
@@ -45,8 +47,7 @@ public sealed class PeopleController : ControllerBase
             request.LastName,
             request.Email,
             request.Phone,
-            request.CompanyId,
-            request.WorkspaceId);
+            request.CompanyId);
 
         var result = await _sender.Send(command, cancellationToken);
         var response = _mapper.Map<PersonResponse>(result);

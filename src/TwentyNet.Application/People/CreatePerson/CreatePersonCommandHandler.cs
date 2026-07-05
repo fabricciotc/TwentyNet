@@ -10,15 +10,22 @@ public sealed class CreatePersonCommandHandler : IRequestHandler<CreatePersonCom
 {
     private readonly IRepository<Person> _repository;
     private readonly IMapper _mapper;
+    private readonly IAuthContext _authContext;
 
-    public CreatePersonCommandHandler(IRepository<Person> repository, IMapper mapper)
+    public CreatePersonCommandHandler(IRepository<Person> repository, IMapper mapper, IAuthContext authContext)
     {
         _repository = repository;
         _mapper = mapper;
+        _authContext = authContext;
     }
 
     public async Task<PersonDto> Handle(CreatePersonCommand request, CancellationToken cancellationToken)
     {
+        if (!_authContext.WorkspaceId.HasValue)
+        {
+            throw new UnauthorizedAccessException("Workspace is required.");
+        }
+
         var person = new Person
         {
             FirstName = request.FirstName,
@@ -26,7 +33,7 @@ public sealed class CreatePersonCommandHandler : IRequestHandler<CreatePersonCom
             Email = string.IsNullOrWhiteSpace(request.Email) ? null : new Email(request.Email),
             Phone = string.IsNullOrWhiteSpace(request.Phone) ? null : new PhoneNumber(request.Phone),
             CompanyId = request.CompanyId,
-            WorkspaceId = request.WorkspaceId
+            WorkspaceId = _authContext.WorkspaceId.Value
         };
 
         await _repository.AddAsync(person, cancellationToken);

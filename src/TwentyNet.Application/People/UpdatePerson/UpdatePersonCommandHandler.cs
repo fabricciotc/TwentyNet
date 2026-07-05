@@ -10,16 +10,27 @@ public sealed class UpdatePersonCommandHandler : IRequestHandler<UpdatePersonCom
 {
     private readonly IRepository<Person> _repository;
     private readonly IMapper _mapper;
+    private readonly IAuthContext _authContext;
 
-    public UpdatePersonCommandHandler(IRepository<Person> repository, IMapper mapper)
+    public UpdatePersonCommandHandler(IRepository<Person> repository, IMapper mapper, IAuthContext authContext)
     {
         _repository = repository;
         _mapper = mapper;
+        _authContext = authContext;
     }
 
     public async Task<PersonDto> Handle(UpdatePersonCommand request, CancellationToken cancellationToken)
     {
-        var person = await _repository.GetByIdAsync(request.Id, cancellationToken)
+        if (!_authContext.WorkspaceId.HasValue)
+        {
+            throw new UnauthorizedAccessException("Workspace is required.");
+        }
+
+        var people = await _repository.ListAsync(
+            p => p.Id == request.Id && p.WorkspaceId == _authContext.WorkspaceId.Value,
+            cancellationToken);
+
+        var person = people.FirstOrDefault()
             ?? throw new KeyNotFoundException($"Person with id {request.Id} not found.");
 
         person.FirstName = request.FirstName;

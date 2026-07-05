@@ -14,8 +14,7 @@ public sealed class CreatePersonCommandValidatorTests
             "Doe",
             "not-an-email",
             null,
-            null,
-            Guid.NewGuid());
+            null);
 
         var result = _validator.Validate(command);
 
@@ -31,8 +30,7 @@ public sealed class CreatePersonCommandValidatorTests
             "Doe",
             "john@example.com",
             "+1 555 1234",
-            null,
-            Guid.NewGuid());
+            null);
 
         var result = _validator.Validate(command);
 

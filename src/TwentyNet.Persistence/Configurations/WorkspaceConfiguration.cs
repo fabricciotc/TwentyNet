@@ -17,9 +17,9 @@ public sealed class WorkspaceConfiguration : IEntityTypeConfiguration<Workspace>
         builder.Property(x => x.CreatedAt).IsRequired();
         builder.Property(x => x.UpdatedAt).IsRequired();
 
-        builder.HasMany(x => x.Users)
-            .WithOne(u => u.Workspace)
-            .HasForeignKey(u => u.WorkspaceId)
+        builder.HasMany(x => x.UserMemberships)
+            .WithOne(m => m.Workspace)
+            .HasForeignKey(m => m.WorkspaceId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasMany(x => x.Companies)

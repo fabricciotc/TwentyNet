@@ -20,8 +20,15 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(x => x.FirstName).IsRequired().HasMaxLength(100);
         builder.Property(x => x.LastName).IsRequired().HasMaxLength(100);
+        builder.Property(x => x.PasswordHash).IsRequired();
+        builder.Property(x => x.IsEmailVerified).IsRequired();
+        builder.Property(x => x.Disabled).IsRequired();
 
         builder.HasIndex(x => x.Email).IsUnique();
-        builder.HasIndex(x => x.WorkspaceId);
+
+        builder.HasMany(x => x.WorkspaceMemberships)
+            .WithOne(m => m.User)
+            .HasForeignKey(m => m.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -17,7 +17,7 @@ namespace TwentyNet.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.15")
+                .HasAnnotation("ProductVersion", "8.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -104,6 +104,46 @@ namespace TwentyNet.Persistence.Migrations
                     b.ToTable("People");
                 });
 
+            modelBuilder.Entity("TwentyNet.Domain.Entities.RefreshToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("WorkspaceId");
+
+                    b.ToTable("RefreshTokens");
+                });
+
             modelBuilder.Entity("TwentyNet.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -112,6 +152,9 @@ namespace TwentyNet.Persistence.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Disabled")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -123,25 +166,60 @@ namespace TwentyNet.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<bool>("IsEmailVerified")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
                         .IsUnique();
 
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("TwentyNet.Domain.Entities.UserWorkspaceMembership", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
                     b.HasIndex("WorkspaceId");
 
-                    b.ToTable("Users");
+                    b.HasIndex("UserId", "WorkspaceId")
+                        .IsUnique();
+
+                    b.ToTable("UserWorkspaceMemberships");
                 });
 
             modelBuilder.Entity("TwentyNet.Domain.Entities.Workspace", b =>
@@ -195,13 +273,32 @@ namespace TwentyNet.Persistence.Migrations
                     b.Navigation("Workspace");
                 });
 
-            modelBuilder.Entity("TwentyNet.Domain.Entities.User", b =>
+            modelBuilder.Entity("TwentyNet.Domain.Entities.RefreshToken", b =>
                 {
+                    b.HasOne("TwentyNet.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("TwentyNet.Domain.Entities.UserWorkspaceMembership", b =>
+                {
+                    b.HasOne("TwentyNet.Domain.Entities.User", "User")
+                        .WithMany("WorkspaceMemberships")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("TwentyNet.Domain.Entities.Workspace", "Workspace")
-                        .WithMany("Users")
+                        .WithMany("UserMemberships")
                         .HasForeignKey("WorkspaceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("User");
 
                     b.Navigation("Workspace");
                 });
@@ -211,13 +308,18 @@ namespace TwentyNet.Persistence.Migrations
                     b.Navigation("People");
                 });
 
+            modelBuilder.Entity("TwentyNet.Domain.Entities.User", b =>
+                {
+                    b.Navigation("WorkspaceMemberships");
+                });
+
             modelBuilder.Entity("TwentyNet.Domain.Entities.Workspace", b =>
                 {
                     b.Navigation("Companies");
 
                     b.Navigation("People");
 
-                    b.Navigation("Users");
+                    b.Navigation("UserMemberships");
                 });
 #pragma warning restore 612, 618
         }

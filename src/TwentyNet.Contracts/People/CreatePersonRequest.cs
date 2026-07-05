@@ -5,5 +5,4 @@ public sealed record CreatePersonRequest(
     string LastName,
     string? Email,
     string? Phone,
-    Guid? CompanyId,
-    Guid WorkspaceId);
+    Guid? CompanyId);

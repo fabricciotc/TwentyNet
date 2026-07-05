@@ -39,7 +39,15 @@ public sealed class EfRepository<T> : IRepository<T> where T : BaseEntity
 
     public void Update(T entity)
     {
-        _set.Update(entity);
+        var tracked = _context.ChangeTracker.Entries<T>().FirstOrDefault(e => e.Entity.Id == entity.Id);
+        if (tracked is not null)
+        {
+            _context.Entry(tracked.Entity).CurrentValues.SetValues(entity);
+        }
+        else
+        {
+            _set.Update(entity);
+        }
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)

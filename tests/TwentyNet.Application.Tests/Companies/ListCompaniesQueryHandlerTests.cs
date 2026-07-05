@@ -1,5 +1,7 @@
+using NSubstitute;
 using TwentyNet.Application.Companies.ListCompanies;
 using TwentyNet.Domain.Entities;
+using TwentyNet.Domain.Interfaces;
 using TwentyNet.Persistence.Repositories;
 
 namespace TwentyNet.Application.Tests.Companies;
@@ -23,10 +25,12 @@ public sealed class ListCompaniesQueryHandlerTests : TestBase
 
         var repository = new EfRepository<Company>(context);
         var mapper = MapperTestHelper.CreateMapper();
-        var handler = new ListCompaniesQueryHandler(repository, mapper);
+        var authContext = Substitute.For<IAuthContext>();
+        authContext.WorkspaceId.Returns(workspaceA);
+        var handler = new ListCompaniesQueryHandler(repository, mapper, authContext);
 
         // Act
-        var result = await handler.Handle(new ListCompaniesQuery(workspaceA), CancellationToken.None);
+        var result = await handler.Handle(new ListCompaniesQuery(), CancellationToken.None);
 
         // Assert
         Assert.Equal(2, result.Count);

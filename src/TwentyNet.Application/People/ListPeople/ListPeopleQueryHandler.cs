@@ -9,16 +9,23 @@ public sealed class ListPeopleQueryHandler : IRequestHandler<ListPeopleQuery, IR
 {
     private readonly IRepository<Person> _repository;
     private readonly IMapper _mapper;
+    private readonly IAuthContext _authContext;
 
-    public ListPeopleQueryHandler(IRepository<Person> repository, IMapper mapper)
+    public ListPeopleQueryHandler(IRepository<Person> repository, IMapper mapper, IAuthContext authContext)
     {
         _repository = repository;
         _mapper = mapper;
+        _authContext = authContext;
     }
 
     public async Task<IReadOnlyList<PersonDto>> Handle(ListPeopleQuery request, CancellationToken cancellationToken)
     {
-        var people = await _repository.ListAsync(p => p.WorkspaceId == request.WorkspaceId, cancellationToken);
+        if (!_authContext.WorkspaceId.HasValue)
+        {
+            throw new UnauthorizedAccessException("Workspace is required.");
+        }
+
+        var people = await _repository.ListAsync(p => p.WorkspaceId == _authContext.WorkspaceId.Value, cancellationToken);
         return _mapper.Map<IReadOnlyList<PersonDto>>(people);
     }
 }

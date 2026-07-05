@@ -1,5 +1,6 @@
 using AutoMapper;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TwentyNet.Application.Companies.CreateCompany;
 using TwentyNet.Application.Companies.DeleteCompany;
@@ -11,6 +12,7 @@ using TwentyNet.Contracts.Companies;
 namespace TwentyNet.BFF.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/companies")]
 public sealed class CompaniesController : ControllerBase
 {
@@ -24,9 +26,9 @@ public sealed class CompaniesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<CompanyResponse>>> List([FromQuery] Guid workspaceId, CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyList<CompanyResponse>>> List(CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(new ListCompaniesQuery(workspaceId), cancellationToken);
+        var result = await _sender.Send(new ListCompaniesQuery(), cancellationToken);
         return Ok(_mapper.Map<IReadOnlyList<CompanyResponse>>(result));
     }
 
@@ -40,7 +42,7 @@ public sealed class CompaniesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<CompanyResponse>> Create([FromBody] CreateCompanyRequest request, CancellationToken cancellationToken)
     {
-        var command = new CreateCompanyCommand(request.Name, request.DomainName, request.Address, request.WorkspaceId);
+        var command = new CreateCompanyCommand(request.Name, request.DomainName, request.Address);
         var result = await _sender.Send(command, cancellationToken);
         var response = _mapper.Map<CompanyResponse>(result);
         return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);

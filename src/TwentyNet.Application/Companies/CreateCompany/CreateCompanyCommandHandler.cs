@@ -9,21 +9,28 @@ public sealed class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyC
 {
     private readonly IRepository<Company> _repository;
     private readonly IMapper _mapper;
+    private readonly IAuthContext _authContext;
 
-    public CreateCompanyCommandHandler(IRepository<Company> repository, IMapper mapper)
+    public CreateCompanyCommandHandler(IRepository<Company> repository, IMapper mapper, IAuthContext authContext)
     {
         _repository = repository;
         _mapper = mapper;
+        _authContext = authContext;
     }
 
     public async Task<CompanyDto> Handle(CreateCompanyCommand request, CancellationToken cancellationToken)
     {
+        if (!_authContext.WorkspaceId.HasValue)
+        {
+            throw new UnauthorizedAccessException("Workspace is required.");
+        }
+
         var company = new Company
         {
             Name = request.Name,
             DomainName = request.DomainName,
             Address = request.Address,
-            WorkspaceId = request.WorkspaceId
+            WorkspaceId = _authContext.WorkspaceId.Value
         };
 
         await _repository.AddAsync(company, cancellationToken);

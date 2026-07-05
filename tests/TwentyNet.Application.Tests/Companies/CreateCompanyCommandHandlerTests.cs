@@ -1,5 +1,7 @@
+using NSubstitute;
 using TwentyNet.Application.Companies.CreateCompany;
 using TwentyNet.Domain.Entities;
+using TwentyNet.Domain.Interfaces;
 using TwentyNet.Persistence.Repositories;
 
 namespace TwentyNet.Application.Tests.Companies;
@@ -13,14 +15,15 @@ public sealed class CreateCompanyCommandHandlerTests : TestBase
         await using var context = CreateInMemoryContext();
         var repository = new EfRepository<Company>(context);
         var mapper = MapperTestHelper.CreateMapper();
-        var handler = new CreateCompanyCommandHandler(repository, mapper);
+        var authContext = Substitute.For<IAuthContext>();
         var workspaceId = Guid.NewGuid();
+        authContext.WorkspaceId.Returns(workspaceId);
+        var handler = new CreateCompanyCommandHandler(repository, mapper, authContext);
 
         var command = new CreateCompanyCommand(
             "Twenty CRM",
             "twenty.com",
-            "123 Main St",
-            workspaceId);
+            "123 Main St");
 
         // Act
         var result = await handler.Handle(command, CancellationToken.None);

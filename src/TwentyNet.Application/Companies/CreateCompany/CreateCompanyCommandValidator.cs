@@ -17,8 +17,5 @@ public sealed class CreateCompanyCommandValidator : AbstractValidator<CreateComp
         RuleFor(x => x.Address)
             .MaximumLength(500)
             .When(x => !string.IsNullOrWhiteSpace(x.Address));
-
-        RuleFor(x => x.WorkspaceId)
-            .NotEmpty();
     }
 }
