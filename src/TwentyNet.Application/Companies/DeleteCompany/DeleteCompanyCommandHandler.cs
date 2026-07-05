@@ -1,5 +1,6 @@
 using MediatR;
 using TwentyNet.Domain.Entities;
+using TwentyNet.Domain.Events;
 using TwentyNet.Domain.Interfaces;
 
 namespace TwentyNet.Application.Companies.DeleteCompany;
@@ -8,11 +9,16 @@ public sealed class DeleteCompanyCommandHandler : IRequestHandler<DeleteCompanyC
 {
     private readonly IRepository<Company> _repository;
     private readonly IAuthContext _authContext;
+    private readonly IRealTimeNotifier _realTimeNotifier;
 
-    public DeleteCompanyCommandHandler(IRepository<Company> repository, IAuthContext authContext)
+    public DeleteCompanyCommandHandler(
+        IRepository<Company> repository,
+        IAuthContext authContext,
+        IRealTimeNotifier realTimeNotifier)
     {
         _repository = repository;
         _authContext = authContext;
+        _realTimeNotifier = realTimeNotifier;
     }
 
     public async Task<Unit> Handle(DeleteCompanyCommand request, CancellationToken cancellationToken)
@@ -35,6 +41,10 @@ public sealed class DeleteCompanyCommandHandler : IRequestHandler<DeleteCompanyC
 
         await _repository.DeleteAsync(request.Id, cancellationToken);
         await _repository.SaveChangesAsync(cancellationToken);
+
+        await _realTimeNotifier.NotifyAsync(
+            new ObjectRecordDeletedEvent(_authContext.WorkspaceId.Value, "Company", request.Id),
+            cancellationToken);
 
         return Unit.Value;
     }

@@ -1,5 +1,6 @@
 using MediatR;
 using TwentyNet.Domain.Entities;
+using TwentyNet.Domain.Events;
 using TwentyNet.Domain.Interfaces;
 
 namespace TwentyNet.Application.People.DeletePerson;
@@ -8,11 +9,16 @@ public sealed class DeletePersonCommandHandler : IRequestHandler<DeletePersonCom
 {
     private readonly IRepository<Person> _repository;
     private readonly IAuthContext _authContext;
+    private readonly IRealTimeNotifier _realTimeNotifier;
 
-    public DeletePersonCommandHandler(IRepository<Person> repository, IAuthContext authContext)
+    public DeletePersonCommandHandler(
+        IRepository<Person> repository,
+        IAuthContext authContext,
+        IRealTimeNotifier realTimeNotifier)
     {
         _repository = repository;
         _authContext = authContext;
+        _realTimeNotifier = realTimeNotifier;
     }
 
     public async Task<Unit> Handle(DeletePersonCommand request, CancellationToken cancellationToken)
@@ -35,6 +41,10 @@ public sealed class DeletePersonCommandHandler : IRequestHandler<DeletePersonCom
 
         await _repository.DeleteAsync(request.Id, cancellationToken);
         await _repository.SaveChangesAsync(cancellationToken);
+
+        await _realTimeNotifier.NotifyAsync(
+            new ObjectRecordDeletedEvent(_authContext.WorkspaceId.Value, "Person", request.Id),
+            cancellationToken);
 
         return Unit.Value;
     }

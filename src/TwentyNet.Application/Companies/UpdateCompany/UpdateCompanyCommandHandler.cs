@@ -1,6 +1,7 @@
 using AutoMapper;
 using MediatR;
 using TwentyNet.Domain.Entities;
+using TwentyNet.Domain.Events;
 using TwentyNet.Domain.Interfaces;
 
 namespace TwentyNet.Application.Companies.UpdateCompany;
@@ -10,12 +11,18 @@ public sealed class UpdateCompanyCommandHandler : IRequestHandler<UpdateCompanyC
     private readonly IRepository<Company> _repository;
     private readonly IMapper _mapper;
     private readonly IAuthContext _authContext;
+    private readonly IRealTimeNotifier _realTimeNotifier;
 
-    public UpdateCompanyCommandHandler(IRepository<Company> repository, IMapper mapper, IAuthContext authContext)
+    public UpdateCompanyCommandHandler(
+        IRepository<Company> repository,
+        IMapper mapper,
+        IAuthContext authContext,
+        IRealTimeNotifier realTimeNotifier)
     {
         _repository = repository;
         _mapper = mapper;
         _authContext = authContext;
+        _realTimeNotifier = realTimeNotifier;
     }
 
     public async Task<CompanyDto> Handle(UpdateCompanyCommand request, CancellationToken cancellationToken)
@@ -38,6 +45,10 @@ public sealed class UpdateCompanyCommandHandler : IRequestHandler<UpdateCompanyC
 
         _repository.Update(company);
         await _repository.SaveChangesAsync(cancellationToken);
+
+        await _realTimeNotifier.NotifyAsync(
+            new ObjectRecordUpdatedEvent(_authContext.WorkspaceId.Value, "Company", company.Id),
+            cancellationToken);
 
         return _mapper.Map<CompanyDto>(company);
     }

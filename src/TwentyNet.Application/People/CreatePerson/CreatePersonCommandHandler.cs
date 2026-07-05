@@ -1,6 +1,7 @@
 using AutoMapper;
 using MediatR;
 using TwentyNet.Domain.Entities;
+using TwentyNet.Domain.Events;
 using TwentyNet.Domain.Interfaces;
 using TwentyNet.Domain.ValueObjects;
 
@@ -11,12 +12,18 @@ public sealed class CreatePersonCommandHandler : IRequestHandler<CreatePersonCom
     private readonly IRepository<Person> _repository;
     private readonly IMapper _mapper;
     private readonly IAuthContext _authContext;
+    private readonly IRealTimeNotifier _realTimeNotifier;
 
-    public CreatePersonCommandHandler(IRepository<Person> repository, IMapper mapper, IAuthContext authContext)
+    public CreatePersonCommandHandler(
+        IRepository<Person> repository,
+        IMapper mapper,
+        IAuthContext authContext,
+        IRealTimeNotifier realTimeNotifier)
     {
         _repository = repository;
         _mapper = mapper;
         _authContext = authContext;
+        _realTimeNotifier = realTimeNotifier;
     }
 
     public async Task<PersonDto> Handle(CreatePersonCommand request, CancellationToken cancellationToken)
@@ -38,6 +45,10 @@ public sealed class CreatePersonCommandHandler : IRequestHandler<CreatePersonCom
 
         await _repository.AddAsync(person, cancellationToken);
         await _repository.SaveChangesAsync(cancellationToken);
+
+        await _realTimeNotifier.NotifyAsync(
+            new ObjectRecordCreatedEvent(_authContext.WorkspaceId.Value, "Person", person.Id),
+            cancellationToken);
 
         return _mapper.Map<PersonDto>(person);
     }
