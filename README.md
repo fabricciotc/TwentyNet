@@ -40,6 +40,9 @@ TwentyNet.sln
 - **Webhook**: URL externa, secret, eventos suscritos y estado activo. Pertenece a un workspace.
 - **ConnectedAccount**: cuenta de proveedor externo (`Google`, `Microsoft`, `Imap`) vinculada a un usuario y workspace. Almacena tokens cifrados.
 - **MessageChannel** / **CalendarChannel**: canales de sincronización asociados a un `ConnectedAccount` (cimientos para futura sincronización de email/calendario).
+- **View**: vista guardada por workspace y objeto (`Company` o `Person`) con filtros y ordenamientos.
+- **ViewFilter**: filtro dinámico perteneciente a una `View` (`Field`, `Operator`, `Value`).
+- **ViewSort**: ordenamiento dinámico perteneciente a una `View` (`Field`, `Direction`).
 
 ## Requisitos
 
@@ -94,6 +97,7 @@ dotnet ef database update --project src/TwentyNet.Persistence --startup-project 
 
 La migración `AddAuth` añade las tablas y columnas necesarias para autenticación (usuarios, memberships, refresh tokens).
 La migración `AddWorkspaceInvitesAndRoles` añade la entidad `WorkspaceInvite`, convierte el rol de membership a enum mapeado como string y actualiza los tokens JWT para incluir el claim `role`.
+La migración `AddViewsFiltersSorts` añade las entidades `View`, `ViewFilter` y `ViewSort` para vistas, filtros dinámicos y ordenamiento.
 
 ## Ejecutar
 
@@ -225,11 +229,44 @@ Los endpoints de workspace requieren autenticación. Las operaciones administrat
 
 ## Endpoints protegidos
 
+### Views
+
+Las vistas permiten guardar filtros y ordenamientos reutilizables para `Company` y `Person`.
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/views?objectName=Company` | Listar vistas del workspace actual |
+| GET | `/api/views/{id}` | Obtener vista por id |
+| POST | `/api/views` | Crear vista |
+| PUT | `/api/views/{id}` | Actualizar vista |
+| DELETE | `/api/views/{id}` | Eliminar vista |
+
+**Ejemplo POST /api/views:**
+
+```json
+{
+  "objectName": "Company",
+  "name": "Empresas Acme",
+  "isDefault": false,
+  "filters": [
+    { "field": "Name", "operator": "Contains", "value": "Acme" },
+    { "field": "DomainName", "operator": "IsNotEmpty" }
+  ],
+  "sorts": [
+    { "field": "Name", "direction": "Asc" }
+  ]
+}
+```
+
+Operadores soportados: `Equals`, `Contains`, `GreaterThan`, `LessThan`, `IsEmpty`, `IsNotEmpty`.
+Direcciones soportadas: `Asc`, `Desc`.
+
 ### Companies
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| GET | `/api/companies` | Listar empresas del workspace actual |
+| GET | `/api/companies?viewId=&search=&skip=0&take=50` | Listar empresas del workspace actual (paginado, búsqueda global y vista opcional) |
+| POST | `/api/companies/search` | Buscar empresas con filtros y ordenamientos explícitos |
 | GET | `/api/companies/{id}` | Obtener empresa por id |
 | POST | `/api/companies` | Crear empresa |
 | PUT | `/api/companies/{id}` | Actualizar empresa |
@@ -245,15 +282,36 @@ Los endpoints de workspace requieren autenticación. Las operaciones administrat
 }
 ```
 
+**Ejemplo POST /api/companies/search:**
+
+```json
+{
+  "search": "twenty",
+  "filters": [
+    { "field": "DomainName", "operator": "IsNotEmpty" }
+  ],
+  "sorts": [
+    { "field": "Name", "direction": "Asc" }
+  ],
+  "skip": 0,
+  "take": 20
+}
+```
+
+Campos de filtro/ordenamiento soportados para `Company`: `Name`, `DomainName`, `Address`.
+
 ### People
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| GET | `/api/people` | Listar personas del workspace actual |
+| GET | `/api/people?viewId=&search=&skip=0&take=50` | Listar personas del workspace actual (paginado, búsqueda global y vista opcional) |
+| POST | `/api/people/search` | Buscar personas con filtros y ordenamientos explícitos |
 | GET | `/api/people/{id}` | Obtener persona por id |
 | POST | `/api/people` | Crear persona |
 | PUT | `/api/people/{id}` | Actualizar persona |
 | DELETE | `/api/people/{id}` | Eliminar persona |
+
+Campos de filtro/ordenamiento soportados para `Person`: `FirstName`, `LastName`, `Email`, `Phone`.
 
 ## Realtime (SignalR)
 
