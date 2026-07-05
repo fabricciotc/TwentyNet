@@ -10,15 +10,18 @@ public sealed class DeleteCompanyCommandHandler : IRequestHandler<DeleteCompanyC
     private readonly IRepository<Company> _repository;
     private readonly IAuthContext _authContext;
     private readonly IRealTimeNotifier _realTimeNotifier;
+    private readonly IPublisher _publisher;
 
     public DeleteCompanyCommandHandler(
         IRepository<Company> repository,
         IAuthContext authContext,
-        IRealTimeNotifier realTimeNotifier)
+        IRealTimeNotifier realTimeNotifier,
+        IPublisher publisher)
     {
         _repository = repository;
         _authContext = authContext;
         _realTimeNotifier = realTimeNotifier;
+        _publisher = publisher;
     }
 
     public async Task<Unit> Handle(DeleteCompanyCommand request, CancellationToken cancellationToken)
@@ -42,9 +45,9 @@ public sealed class DeleteCompanyCommandHandler : IRequestHandler<DeleteCompanyC
         await _repository.DeleteAsync(request.Id, cancellationToken);
         await _repository.SaveChangesAsync(cancellationToken);
 
-        await _realTimeNotifier.NotifyAsync(
-            new ObjectRecordDeletedEvent(_authContext.WorkspaceId.Value, "Company", request.Id),
-            cancellationToken);
+        var domainEvent = new ObjectRecordDeletedEvent(_authContext.WorkspaceId.Value, "Company", request.Id);
+        await _realTimeNotifier.NotifyAsync(domainEvent, cancellationToken);
+        await _publisher.Publish(domainEvent, cancellationToken);
 
         return Unit.Value;
     }

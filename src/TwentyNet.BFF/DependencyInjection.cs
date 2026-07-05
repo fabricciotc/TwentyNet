@@ -3,8 +3,10 @@ using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using TwentyNet.Application.Webhooks;
 using TwentyNet.BFF.Hubs;
 using TwentyNet.BFF.Options;
 using TwentyNet.BFF.Services;
@@ -61,6 +63,11 @@ public static class DependencyInjection
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IPasswordService, PasswordService>();
         services.AddScoped<IRealTimeNotifier, SignalRRealTimeNotifier>();
+        services.AddScoped<IWebhookDeliveryService, WebhookDeliveryService>();
+        services.AddSingleton<ITokenEncryptionService, TokenEncryptionService>();
+        services.AddScoped<ISecureHttpClient, SecureHttpClient>();
+
+        services.AddDataProtection();
 
         services.AddHttpClient(HttpClientOptions.EnrichmentClientName, (provider, client) =>
         {
@@ -68,6 +75,8 @@ public static class DependencyInjection
             client.BaseAddress = new Uri(options.EnrichmentBaseAddress);
             client.Timeout = TimeSpan.FromSeconds(options.EnrichmentTimeoutSeconds);
         });
+
+        services.AddHttpClient(HttpClientOptions.WebhookClientName);
 
         AddStorage(services);
 

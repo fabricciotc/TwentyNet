@@ -10,15 +10,18 @@ public sealed class DeletePersonCommandHandler : IRequestHandler<DeletePersonCom
     private readonly IRepository<Person> _repository;
     private readonly IAuthContext _authContext;
     private readonly IRealTimeNotifier _realTimeNotifier;
+    private readonly IPublisher _publisher;
 
     public DeletePersonCommandHandler(
         IRepository<Person> repository,
         IAuthContext authContext,
-        IRealTimeNotifier realTimeNotifier)
+        IRealTimeNotifier realTimeNotifier,
+        IPublisher publisher)
     {
         _repository = repository;
         _authContext = authContext;
         _realTimeNotifier = realTimeNotifier;
+        _publisher = publisher;
     }
 
     public async Task<Unit> Handle(DeletePersonCommand request, CancellationToken cancellationToken)
@@ -42,9 +45,9 @@ public sealed class DeletePersonCommandHandler : IRequestHandler<DeletePersonCom
         await _repository.DeleteAsync(request.Id, cancellationToken);
         await _repository.SaveChangesAsync(cancellationToken);
 
-        await _realTimeNotifier.NotifyAsync(
-            new ObjectRecordDeletedEvent(_authContext.WorkspaceId.Value, "Person", request.Id),
-            cancellationToken);
+        var domainEvent = new ObjectRecordDeletedEvent(_authContext.WorkspaceId.Value, "Person", request.Id);
+        await _realTimeNotifier.NotifyAsync(domainEvent, cancellationToken);
+        await _publisher.Publish(domainEvent, cancellationToken);
 
         return Unit.Value;
     }

@@ -1,5 +1,7 @@
+using MediatR;
+
 namespace TwentyNet.Domain.Common;
 
-public interface IDomainEvent
+public interface IDomainEvent : INotification
 {
 }

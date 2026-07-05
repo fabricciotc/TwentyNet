@@ -20,6 +20,10 @@ public sealed class AppDbContext : DbContext, IUnitOfWork
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<Person> People => Set<Person>();
     public DbSet<FileEntity> Files => Set<FileEntity>();
+    public DbSet<Webhook> Webhooks => Set<Webhook>();
+    public DbSet<ConnectedAccount> ConnectedAccounts => Set<ConnectedAccount>();
+    public DbSet<MessageChannel> MessageChannels => Set<MessageChannel>();
+    public DbSet<CalendarChannel> CalendarChannels => Set<CalendarChannel>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

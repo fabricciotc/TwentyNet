@@ -12,17 +12,20 @@ public sealed class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyC
     private readonly IMapper _mapper;
     private readonly IAuthContext _authContext;
     private readonly IRealTimeNotifier _realTimeNotifier;
+    private readonly IPublisher _publisher;
 
     public CreateCompanyCommandHandler(
         IRepository<Company> repository,
         IMapper mapper,
         IAuthContext authContext,
-        IRealTimeNotifier realTimeNotifier)
+        IRealTimeNotifier realTimeNotifier,
+        IPublisher publisher)
     {
         _repository = repository;
         _mapper = mapper;
         _authContext = authContext;
         _realTimeNotifier = realTimeNotifier;
+        _publisher = publisher;
     }
 
     public async Task<CompanyDto> Handle(CreateCompanyCommand request, CancellationToken cancellationToken)
@@ -43,9 +46,9 @@ public sealed class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyC
         await _repository.AddAsync(company, cancellationToken);
         await _repository.SaveChangesAsync(cancellationToken);
 
-        await _realTimeNotifier.NotifyAsync(
-            new ObjectRecordCreatedEvent(_authContext.WorkspaceId.Value, "Company", company.Id),
-            cancellationToken);
+        var domainEvent = new ObjectRecordCreatedEvent(_authContext.WorkspaceId.Value, "Company", company.Id);
+        await _realTimeNotifier.NotifyAsync(domainEvent, cancellationToken);
+        await _publisher.Publish(domainEvent, cancellationToken);
 
         return _mapper.Map<CompanyDto>(company);
     }

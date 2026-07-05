@@ -36,6 +36,9 @@ TwentyNet.sln
 - **Company**: empresa con nombre, dominio y dirección.
 - **Person**: contacto con nombre, email, teléfono y relación opcional con una empresa.
 - **File**: archivo con nombre, mime type, tamaño, carpeta (`Attachment`, `Avatar`, `EmailAttachment`), storage key, workspace y estado (`Pending`/`Uploaded`). Soporta soft delete y puede asociarse a `Person` o `Company` como attachment.
+- **Webhook**: URL externa, secret, eventos suscritos y estado activo. Pertenece a un workspace.
+- **ConnectedAccount**: cuenta de proveedor externo (`Google`, `Microsoft`, `Imap`) vinculada a un usuario y workspace. Almacena tokens cifrados.
+- **MessageChannel** / **CalendarChannel**: canales de sincronización asociados a un `ConnectedAccount` (cimientos para futura sincronización de email/calendario).
 
 ## Requisitos
 
@@ -55,6 +58,12 @@ Edita `src/TwentyNet.BFF/appsettings.json` (o `appsettings.Development.json`) co
 {
   "ConnectionStrings": {
     "DefaultConnection": "Host=localhost;Database=twentynet;Username=postgres;Password=tu_password"
+  },
+  "HttpClient": {
+    "EnrichmentBaseAddress": "https://api.example.com",
+    "EnrichmentTimeoutSeconds": 30,
+    "WebhookTimeoutSeconds": 30,
+    "SsrfBlockPrivateNetworks": true
   },
   "Jwt": {
     "Issuer": "TwentyNet",
@@ -244,6 +253,107 @@ connection.on("ObjectRecordChanged", (objectName, recordId, changeType) => {
   "companyId": null
 }
 ```
+
+### Webhooks
+
+Los webhooks salientes notifican a URLs externas cuando ocurren cambios en registros de `Company` y `Person` dentro del workspace actual.
+
+#### Eventos soportados
+
+| Evento | Descripción |
+|--------|-------------|
+| `company.created` | Nueva empresa creada |
+| `company.updated` | Empresa actualizada |
+| `company.deleted` | Empresa eliminada |
+| `person.created` | Nueva persona creada |
+| `person.updated` | Persona actualizada |
+| `person.deleted` | Persona eliminada |
+
+#### Endpoints
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/webhooks` | Listar webhooks del workspace |
+| GET | `/api/webhooks/{id}` | Obtener webhook por id |
+| POST | `/api/webhooks` | Crear webhook |
+| PUT | `/api/webhooks/{id}` | Actualizar webhook |
+| DELETE | `/api/webhooks/{id}` | Eliminar webhook |
+
+**Ejemplo POST /api/webhooks:**
+
+```json
+{
+  "targetUrl": "https://example.com/webhook",
+  "secret": "mi-webhook-secret",
+  "events": ["company.created", "company.updated", "person.created"]
+}
+```
+
+#### Formato de entrega
+
+Cada entrega es un POST con `Content-Type: application/json` y los siguientes headers:
+
+| Header | Valor |
+|--------|-------|
+| `X-Twenty-Webhook-Event` | Nombre del evento, ej. `company.created` |
+| `X-Twenty-Webhook-Signature` | `sha256=<hex>` con HMAC-SHA256 del cuerpo JSON usando el `secret` del webhook |
+
+**Ejemplo de cuerpo:**
+
+```json
+{
+  "event": "company.created",
+  "workspaceId": "WORKSPACE_ID",
+  "objectName": "Company",
+  "recordId": "RECORD_ID",
+  "timestamp": "2026-07-05T17:46:00Z",
+  "data": {
+    "recordId": "RECORD_ID"
+  }
+}
+```
+
+#### Seguridad SSRF
+
+El envío de webhooks usa `SecureHttpClient`, que resuelve el host de `targetUrl` a direcciones IP y bloquea rangos privados cuando `HttpClient:SsrfBlockPrivateNetworks` es `true` (por defecto). Se bloquean `localhost`, `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, `::1` y `fc00::/7`.
+
+### Connected Accounts (cimientos de conectores)
+
+Los connected accounts almacenan credenciales de proveedores externos (`Google`, `Microsoft`, `Imap`) para futura sincronización de mensajería y calendarios. Los tokens (`AccessToken` y `RefreshToken`) se cifran en reposo usando `IDataProtectionProvider` con el propósito `"ConnectedAccountTokens"`.
+
+#### Proveedores soportados
+
+| Valor | Descripción |
+|-------|-------------|
+| `Google` | Google (Gmail / Google Calendar) |
+| `Microsoft` | Microsoft (Outlook / Outlook Calendar) |
+| `Imap` | IMAP genérico |
+
+#### Endpoints
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/connected-accounts` | Listar cuentas del workspace |
+| GET | `/api/connected-accounts/{id}` | Obtener cuenta por id |
+| POST | `/api/connected-accounts` | Crear cuenta conectada |
+| DELETE | `/api/connected-accounts/{id}` | Eliminar cuenta conectada |
+
+**Ejemplo POST /api/connected-accounts:**
+
+```json
+{
+  "provider": "Google",
+  "email": "user@example.com",
+  "accessToken": "ACCESS_TOKEN",
+  "refreshToken": "REFRESH_TOKEN",
+  "expiresAt": "2026-07-05T18:00:00Z"
+}
+```
+
+#### Entidades relacionadas (no expuestas aún por API)
+
+- `MessageChannel`: canal de sincronización de mensajes (`Gmail`, `Outlook`, `Imap`).
+- `CalendarChannel`: canal de sincronización de calendarios (`GoogleCalendar`, `OutlookCalendar`, `CalDav`).
 
 ### Files (manejo de archivos)
 

@@ -1,3 +1,4 @@
+using MediatR;
 using NSubstitute;
 using TwentyNet.Application.Companies.CreateCompany;
 using TwentyNet.Domain.Common;
@@ -19,9 +20,10 @@ public sealed class CreateCompanyCommandHandlerTests : TestBase
         var mapper = MapperTestHelper.CreateMapper();
         var authContext = Substitute.For<IAuthContext>();
         var realTimeNotifier = Substitute.For<IRealTimeNotifier>();
+        var publisher = Substitute.For<IPublisher>();
         var workspaceId = Guid.NewGuid();
         authContext.WorkspaceId.Returns(workspaceId);
-        var handler = new CreateCompanyCommandHandler(repository, mapper, authContext, realTimeNotifier);
+        var handler = new CreateCompanyCommandHandler(repository, mapper, authContext, realTimeNotifier, publisher);
 
         var command = new CreateCompanyCommand(
             "Twenty CRM",
@@ -52,9 +54,10 @@ public sealed class CreateCompanyCommandHandlerTests : TestBase
         var mapper = MapperTestHelper.CreateMapper();
         var authContext = Substitute.For<IAuthContext>();
         var realTimeNotifier = Substitute.For<IRealTimeNotifier>();
+        var publisher = Substitute.For<IPublisher>();
         var workspaceId = Guid.NewGuid();
         authContext.WorkspaceId.Returns(workspaceId);
-        var handler = new CreateCompanyCommandHandler(repository, mapper, authContext, realTimeNotifier);
+        var handler = new CreateCompanyCommandHandler(repository, mapper, authContext, realTimeNotifier, publisher);
 
         var command = new CreateCompanyCommand(
             "Twenty CRM",
