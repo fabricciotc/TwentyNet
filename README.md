@@ -43,6 +43,9 @@ TwentyNet.sln
 - **View**: vista guardada por workspace y objeto (`Company` o `Person`) con filtros y ordenamientos.
 - **ViewFilter**: filtro dinámico perteneciente a una `View` (`Field`, `Operator`, `Value`).
 - **ViewSort**: ordenamiento dinámico perteneciente a una `View` (`Field`, `Direction`).
+- **Note**: nota de texto asociada a un `Company` o `Person`, con título, contenido y autor.
+- **TaskItem**: tarea con estado (`Todo`, `InProgress`, `Done`), asignación opcional a un usuario y fecha de vencimiento opcional, asociada a un `Company` o `Person`.
+- **TimelineActivity**: actividad de timeline generada a partir de eventos de dominio (`RecordCreated`, `RecordUpdated`, `NoteCreated`, `TaskCreated`, `TaskCompleted`, `FileUploaded`) vinculada a un `Company` o `Person`.
 
 ## Requisitos
 
@@ -98,6 +101,7 @@ dotnet ef database update --project src/TwentyNet.Persistence --startup-project 
 La migración `AddAuth` añade las tablas y columnas necesarias para autenticación (usuarios, memberships, refresh tokens).
 La migración `AddWorkspaceInvitesAndRoles` añade la entidad `WorkspaceInvite`, convierte el rol de membership a enum mapeado como string y actualiza los tokens JWT para incluir el claim `role`.
 La migración `AddViewsFiltersSorts` añade las entidades `View`, `ViewFilter` y `ViewSort` para vistas, filtros dinámicos y ordenamiento.
+La migración `AddNotesTasksTimeline` añade las entidades `Note`, `TaskItem` y `TimelineActivity`, junto con sus configuraciones, índices y la relación con `Company`, `Person`, `User` y `Workspace`.
 
 ## Ejecutar
 
@@ -313,6 +317,83 @@ Campos de filtro/ordenamiento soportados para `Company`: `Name`, `DomainName`, `
 
 Campos de filtro/ordenamiento soportados para `Person`: `FirstName`, `LastName`, `Email`, `Phone`.
 
+### Notes
+
+Las notas se crean siempre asociadas a un `Company` o a un `Person` del workspace actual.
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/companies/{id}/notes` | Listar notas de una empresa |
+| POST | `/api/companies/{id}/notes` | Crear nota en una empresa |
+| GET | `/api/people/{id}/notes` | Listar notas de una persona |
+| POST | `/api/people/{id}/notes` | Crear nota en una persona |
+| GET | `/api/notes/{id}` | Obtener nota por id |
+| PUT | `/api/notes/{id}` | Actualizar nota |
+| DELETE | `/api/notes/{id}` | Eliminar nota |
+
+**Ejemplo POST /api/companies/{id}/notes:**
+
+```json
+{
+  "title": "Meeting notes",
+  "content": "Discussed pricing and next steps"
+}
+```
+
+### Tasks
+
+Las tareas se crean siempre asociadas a un `Company` o a un `Person` del workspace actual. El estado puede ser `Todo`, `InProgress` o `Done`.
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/companies/{id}/tasks` | Listar tareas de una empresa |
+| POST | `/api/companies/{id}/tasks` | Crear tarea en una empresa |
+| GET | `/api/people/{id}/tasks` | Listar tareas de una persona |
+| POST | `/api/people/{id}/tasks` | Crear tarea en una persona |
+| GET | `/api/tasks/{id}` | Obtener tarea por id |
+| POST | `/api/tasks/{id}/complete` | Marcar tarea como completada |
+| PUT | `/api/tasks/{id}` | Actualizar tarea |
+| DELETE | `/api/tasks/{id}` | Eliminar tarea |
+
+**Ejemplo POST /api/people/{id}/tasks:**
+
+```json
+{
+  "title": "Send follow-up email",
+  "assignedToUserId": "USER_ID_AQUI",
+  "dueDate": "2026-07-10T17:00:00Z"
+}
+```
+
+**Ejemplo PUT /api/tasks/{id}:**
+
+```json
+{
+  "title": "Send follow-up email",
+  "status": "InProgress",
+  "assignedToUserId": "USER_ID_AQUI",
+  "dueDate": "2026-07-10T17:00:00Z"
+}
+```
+
+### Timeline
+
+El timeline muestra las actividades registradas para un `Company` o `Person`, ordenadas de más reciente a más antigua. Las actividades se generan automáticamente a partir de eventos de dominio.
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/companies/{id}/timeline` | Obtener timeline de una empresa |
+| GET | `/api/people/{id}/timeline` | Obtener timeline de una persona |
+
+**Tipos de actividad posibles:**
+
+- `RecordCreated`
+- `RecordUpdated`
+- `NoteCreated`
+- `TaskCreated`
+- `TaskCompleted`
+- `FileUploaded`
+
 ## Realtime (SignalR)
 
 El BFF expone un hub de SignalR en:
@@ -353,7 +434,7 @@ connection.on("ObjectRecordChanged", (objectName, recordId, changeType) => {
 
 ### Implementación
 
-- El backend emite eventos de dominio (`ObjectRecordCreatedEvent`, `ObjectRecordUpdatedEvent`, `ObjectRecordDeletedEvent`) desde los handlers de Company y Person.
+- El backend emite eventos de dominio (`ObjectRecordCreatedEvent`, `ObjectRecordUpdatedEvent`, `ObjectRecordDeletedEvent`) desde los handlers de Company y Person, y los eventos `NoteCreatedEvent`, `TaskCreatedEvent` y `TaskCompletedEvent` desde los handlers de Notes y Tasks.
 - `SignalRRealTimeNotifier` traduce esos eventos a llamadas de grupo SignalR (`workspace:{workspaceId}`).
 - Los clientes se unen automáticamente al grupo de su workspace en `OnConnectedAsync` y se remueven en `OnDisconnectedAsync`.
 

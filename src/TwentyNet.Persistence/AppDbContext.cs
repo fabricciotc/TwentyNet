@@ -3,6 +3,7 @@ using TwentyNet.Domain.Common;
 using TwentyNet.Domain.Entities;
 using TwentyNet.Domain.Interfaces;
 using FileEntity = TwentyNet.Domain.Entities.File;
+using TaskItemEntity = TwentyNet.Domain.Entities.TaskItem;
 
 namespace TwentyNet.Persistence;
 
@@ -28,6 +29,9 @@ public sealed class AppDbContext : DbContext, IUnitOfWork
     public DbSet<View> Views => Set<View>();
     public DbSet<ViewFilter> ViewFilters => Set<ViewFilter>();
     public DbSet<ViewSort> ViewSorts => Set<ViewSort>();
+    public DbSet<Note> Notes => Set<Note>();
+    public DbSet<TaskItemEntity> TaskItems => Set<TaskItemEntity>();
+    public DbSet<TimelineActivity> TimelineActivities => Set<TimelineActivity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

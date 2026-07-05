@@ -5,6 +5,7 @@ using TwentyNet.Domain.Common;
 using TwentyNet.Domain.Interfaces;
 using TwentyNet.Persistence.Options;
 using TwentyNet.Persistence.Repositories;
+using TwentyNet.Persistence.Services;
 
 namespace TwentyNet.Persistence;
 
@@ -20,6 +21,7 @@ public static class DependencyInjection
 
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
         services.AddScoped<IUnitOfWork>(provider => provider.GetRequiredService<AppDbContext>());
+        services.AddScoped<ITimelineService, EfTimelineService>();
 
         return services;
     }

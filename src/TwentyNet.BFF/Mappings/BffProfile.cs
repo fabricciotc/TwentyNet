@@ -2,7 +2,10 @@ using AutoMapper;
 using TwentyNet.Application.Companies;
 using TwentyNet.Application.ConnectedAccounts;
 using TwentyNet.Application.Files;
+using TwentyNet.Application.Notes;
 using TwentyNet.Application.People;
+using TwentyNet.Application.Tasks;
+using TwentyNet.Application.Timeline;
 using TwentyNet.Application.Views;
 using TwentyNet.Application.Webhooks;
 using TwentyNet.Contracts.Companies;
@@ -31,6 +34,11 @@ public sealed class BffProfile : Profile
         CreateMap<ViewDto, ViewResponse>();
         CreateMap<ViewFilterDto, ViewFilterResponse>();
         CreateMap<ViewSortDto, ViewSortResponse>();
+        CreateMap<NoteDto, Contracts.Notes.NoteResponse>();
+        CreateMap<TaskDto, Contracts.Tasks.TaskResponse>()
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
+        CreateMap<TimelineActivityDto, Contracts.Timeline.TimelineActivityResponse>()
+            .ForMember(dest => dest.ActivityType, opt => opt.MapFrom(src => src.ActivityType));
         CreateMap(typeof(Application.Common.PagedResult<>), typeof(Contracts.Common.PagedResponse<>));
     }
 }

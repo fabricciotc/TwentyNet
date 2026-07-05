@@ -2,14 +2,20 @@ using AutoMapper;
 using TwentyNet.Application.Companies;
 using TwentyNet.Application.ConnectedAccounts;
 using TwentyNet.Application.Files;
+using TwentyNet.Application.Notes;
 using TwentyNet.Application.People;
+using TwentyNet.Application.Tasks;
+using TwentyNet.Application.Timeline;
 using TwentyNet.Application.Views;
 using TwentyNet.Application.Webhooks;
 using TwentyNet.Application.Workspaces;
 using CompanyEntity = TwentyNet.Domain.Entities.Company;
 using ConnectedAccountEntity = TwentyNet.Domain.Entities.ConnectedAccount;
 using FileEntity = TwentyNet.Domain.Entities.File;
+using NoteEntity = TwentyNet.Domain.Entities.Note;
 using PersonEntity = TwentyNet.Domain.Entities.Person;
+using TaskItemEntity = TwentyNet.Domain.Entities.TaskItem;
+using TimelineActivityEntity = TwentyNet.Domain.Entities.TimelineActivity;
 using ViewEntity = TwentyNet.Domain.Entities.View;
 using ViewFilterEntity = TwentyNet.Domain.Entities.ViewFilter;
 using ViewSortEntity = TwentyNet.Domain.Entities.ViewSort;
@@ -33,5 +39,8 @@ public sealed class ApplicationProfile : Profile
         CreateMap<ViewEntity, ViewDto>();
         CreateMap<ViewFilterEntity, ViewFilterDto>();
         CreateMap<ViewSortEntity, ViewSortDto>();
+        CreateMap<NoteEntity, NoteDto>();
+        CreateMap<TaskItemEntity, TaskDto>();
+        CreateMap<TimelineActivityEntity, TimelineActivityDto>();
     }
 }
