@@ -4,11 +4,13 @@ using TwentyNet.Application.ConnectedAccounts;
 using TwentyNet.Application.Files;
 using TwentyNet.Application.People;
 using TwentyNet.Application.Webhooks;
+using TwentyNet.Application.Workspaces;
 using CompanyEntity = TwentyNet.Domain.Entities.Company;
 using ConnectedAccountEntity = TwentyNet.Domain.Entities.ConnectedAccount;
 using FileEntity = TwentyNet.Domain.Entities.File;
 using PersonEntity = TwentyNet.Domain.Entities.Person;
 using WebhookEntity = TwentyNet.Domain.Entities.Webhook;
+using WorkspaceInviteEntity = TwentyNet.Domain.Entities.WorkspaceInvite;
 
 namespace TwentyNet.Application.Mappings;
 
@@ -23,5 +25,6 @@ public sealed class ApplicationProfile : Profile
         CreateMap<FileEntity, FileResponse>();
         CreateMap<WebhookEntity, WebhookDto>();
         CreateMap<ConnectedAccountEntity, ConnectedAccountDto>();
+        CreateMap<WorkspaceInviteEntity, WorkspaceInviteDto>();
     }
 }

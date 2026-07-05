@@ -4,50 +4,36 @@ using MediatR;
 using TwentyNet.Domain.Entities;
 using TwentyNet.Domain.Interfaces;
 
-namespace TwentyNet.Application.Auth.LoginUser;
+namespace TwentyNet.Application.Auth.SwitchWorkspace;
 
-public sealed class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, AuthResponse>
+public sealed class SwitchWorkspaceCommandHandler : IRequestHandler<SwitchWorkspaceCommand, AuthResponse>
 {
-    private readonly IRepository<User> _userRepository;
     private readonly IRepository<UserWorkspaceMembership> _membershipRepository;
     private readonly IRepository<RefreshToken> _refreshTokenRepository;
-    private readonly IPasswordService _passwordService;
     private readonly ITokenService _tokenService;
+    private readonly IAuthContext _authContext;
 
-    public LoginUserCommandHandler(
-        IRepository<User> userRepository,
+    public SwitchWorkspaceCommandHandler(
         IRepository<UserWorkspaceMembership> membershipRepository,
         IRepository<RefreshToken> refreshTokenRepository,
-        IPasswordService passwordService,
-        ITokenService tokenService)
+        ITokenService tokenService,
+        IAuthContext authContext)
     {
-        _userRepository = userRepository;
         _membershipRepository = membershipRepository;
         _refreshTokenRepository = refreshTokenRepository;
-        _passwordService = passwordService;
         _tokenService = tokenService;
+        _authContext = authContext;
     }
 
-    public async Task<AuthResponse> Handle(LoginUserCommand request, CancellationToken cancellationToken)
+    public async Task<AuthResponse> Handle(SwitchWorkspaceCommand request, CancellationToken cancellationToken)
     {
-        var users = await _userRepository.ListAsync(
-            u => u.Email.Value == request.Email.Trim().ToLowerInvariant(),
-            cancellationToken);
-
-        var user = users.FirstOrDefault();
-
-        if (user is null || !_passwordService.Verify(request.Password, user.PasswordHash))
+        if (!_authContext.UserId.HasValue)
         {
-            throw new UnauthorizedAccessException("Invalid email or password.");
-        }
-
-        if (user.Disabled)
-        {
-            throw new UnauthorizedAccessException("User account is disabled.");
+            throw new UnauthorizedAccessException("User is required.");
         }
 
         var memberships = await _membershipRepository.ListAsync(
-            m => m.UserId == user.Id && m.WorkspaceId == request.WorkspaceId,
+            m => m.UserId == _authContext.UserId.Value && m.WorkspaceId == request.WorkspaceId,
             cancellationToken);
 
         var membership = memberships.FirstOrDefault();
@@ -57,14 +43,14 @@ public sealed class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, 
             throw new UnauthorizedAccessException("User is not a member of the specified workspace.");
         }
 
-        var accessToken = _tokenService.GenerateAccessToken(user.Id, request.WorkspaceId, membership.Role);
+        var accessToken = _tokenService.GenerateAccessToken(membership.UserId, membership.WorkspaceId, membership.Role);
         var refreshTokenValue = _tokenService.GenerateRefreshToken();
         var refreshTokenHash = HashToken(refreshTokenValue);
 
         var refreshToken = new RefreshToken
         {
-            UserId = user.Id,
-            WorkspaceId = request.WorkspaceId,
+            UserId = membership.UserId,
+            WorkspaceId = membership.WorkspaceId,
             TokenHash = refreshTokenHash,
             ExpiresAt = DateTime.UtcNow.AddDays(7)
         };
@@ -75,8 +61,8 @@ public sealed class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, 
             accessToken,
             refreshTokenValue,
             3600,
-            user.Id,
-            request.WorkspaceId,
+            membership.UserId,
+            membership.WorkspaceId,
             membership.Role);
     }
 

@@ -3,6 +3,7 @@ using System.Text;
 using AutoMapper;
 using MediatR;
 using TwentyNet.Domain.Entities;
+using TwentyNet.Domain.Enums;
 using TwentyNet.Domain.Interfaces;
 using TwentyNet.Domain.ValueObjects;
 
@@ -64,12 +65,12 @@ public sealed class RegisterUserCommandHandler : IRequestHandler<RegisterUserCom
         {
             UserId = user.Id,
             WorkspaceId = workspace.Id,
-            Role = "Member"
+            Role = WorkspaceRole.Admin
         };
         await _membershipRepository.AddAsync(membership, cancellationToken);
         await _membershipRepository.SaveChangesAsync(cancellationToken);
 
-        var accessToken = _tokenService.GenerateAccessToken(user.Id, workspace.Id);
+        var accessToken = _tokenService.GenerateAccessToken(user.Id, workspace.Id, WorkspaceRole.Admin);
         var refreshTokenValue = _tokenService.GenerateRefreshToken();
         var refreshTokenHash = HashToken(refreshTokenValue);
 
@@ -88,7 +89,8 @@ public sealed class RegisterUserCommandHandler : IRequestHandler<RegisterUserCom
             refreshTokenValue,
             3600,
             user.Id,
-            workspace.Id);
+            workspace.Id,
+            WorkspaceRole.Admin);
     }
 
     private static string HashToken(string token)

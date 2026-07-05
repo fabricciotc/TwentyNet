@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using MediatR;
 using TwentyNet.Domain.Entities;
+using TwentyNet.Domain.Enums;
 using TwentyNet.Domain.Interfaces;
 
 namespace TwentyNet.Application.Auth.RotateToken;
@@ -9,13 +10,16 @@ namespace TwentyNet.Application.Auth.RotateToken;
 public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, AuthResponse>
 {
     private readonly IRepository<RefreshToken> _refreshTokenRepository;
+    private readonly IRepository<UserWorkspaceMembership> _membershipRepository;
     private readonly ITokenService _tokenService;
 
     public RefreshTokenCommandHandler(
         IRepository<RefreshToken> refreshTokenRepository,
+        IRepository<UserWorkspaceMembership> membershipRepository,
         ITokenService tokenService)
     {
         _refreshTokenRepository = refreshTokenRepository;
+        _membershipRepository = membershipRepository;
         _tokenService = tokenService;
     }
 
@@ -39,11 +43,21 @@ public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCom
             throw new UnauthorizedAccessException("Refresh token has been revoked or expired.");
         }
 
+        var memberships = await _membershipRepository.ListAsync(
+            m => m.UserId == storedToken.UserId && m.WorkspaceId == storedToken.WorkspaceId,
+            cancellationToken);
+
+        var membership = memberships.FirstOrDefault();
+        if (membership is null)
+        {
+            throw new UnauthorizedAccessException("User is not a member of the specified workspace.");
+        }
+
         storedToken.RevokedAt = DateTime.UtcNow;
         _refreshTokenRepository.Update(storedToken);
         await _refreshTokenRepository.SaveChangesAsync(cancellationToken);
 
-        var accessToken = _tokenService.GenerateAccessToken(storedToken.UserId, storedToken.WorkspaceId);
+        var accessToken = _tokenService.GenerateAccessToken(storedToken.UserId, storedToken.WorkspaceId, membership.Role);
         var refreshTokenValue = _tokenService.GenerateRefreshToken();
         var newRefreshTokenHash = HashToken(refreshTokenValue);
 
@@ -62,7 +76,8 @@ public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCom
             refreshTokenValue,
             3600,
             storedToken.UserId,
-            storedToken.WorkspaceId);
+            storedToken.WorkspaceId,
+            membership.Role);
     }
 
     private static string HashToken(string token)

@@ -1,3 +1,5 @@
+using TwentyNet.Domain.Enums;
+
 namespace TwentyNet.Application.Auth;
 
 public sealed record AuthResponse(
@@ -5,4 +7,5 @@ public sealed record AuthResponse(
     string RefreshToken,
     int ExpiresIn,
     Guid UserId,
-    Guid WorkspaceId);
+    Guid WorkspaceId,
+    WorkspaceRole Role);
