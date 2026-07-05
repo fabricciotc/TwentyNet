@@ -17,6 +17,7 @@ public sealed class AppDbContext : DbContext, IUnitOfWork
     public DbSet<User> Users => Set<User>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<UserWorkspaceMembership> UserWorkspaceMemberships => Set<UserWorkspaceMembership>();
+    public DbSet<WorkspaceInvite> WorkspaceInvites => Set<WorkspaceInvite>();
     public DbSet<Company> Companies => Set<Company>();
     public DbSet<Person> People => Set<Person>();
     public DbSet<FileEntity> Files => Set<FileEntity>();
