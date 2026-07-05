@@ -1,11 +1,14 @@
 using AutoMapper;
 using TwentyNet.Application.Companies;
 using TwentyNet.Application.ConnectedAccounts;
+using TwentyNet.Application.Files;
 using TwentyNet.Application.People;
+using TwentyNet.Application.Views;
 using TwentyNet.Application.Webhooks;
 using TwentyNet.Contracts.Companies;
 using TwentyNet.Contracts.ConnectedAccounts;
 using TwentyNet.Contracts.People;
+using TwentyNet.Contracts.Views;
 using TwentyNet.Contracts.Webhooks;
 using ApplicationFileResponse = TwentyNet.Application.Files.FileResponse;
 using ApplicationFileUploadResponse = TwentyNet.Application.Files.FileUploadResponse;
@@ -25,5 +28,9 @@ public sealed class BffProfile : Profile
         CreateMap<WebhookDto, WebhookResponse>();
         CreateMap<ConnectedAccountDto, ConnectedAccountResponse>()
             .ForMember(dest => dest.Provider, opt => opt.MapFrom(src => src.Provider.ToString()));
+        CreateMap<ViewDto, ViewResponse>();
+        CreateMap<ViewFilterDto, ViewFilterResponse>();
+        CreateMap<ViewSortDto, ViewSortResponse>();
+        CreateMap(typeof(Application.Common.PagedResult<>), typeof(Contracts.Common.PagedResponse<>));
     }
 }

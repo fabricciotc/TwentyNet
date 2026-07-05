@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TwentyNet.Application.Common;
 using TwentyNet.Application.Companies.CreateCompany;
 using TwentyNet.Application.Companies.DeleteCompany;
 using TwentyNet.Application.Companies.GetCompanyById;
@@ -9,6 +10,7 @@ using TwentyNet.Application.Companies.ListCompanies;
 using TwentyNet.Application.Companies.UpdateCompany;
 using TwentyNet.Application.Files.AttachFileToCompany;
 using TwentyNet.Application.Files.ListCompanyFiles;
+using TwentyNet.Contracts.Common;
 using TwentyNet.Contracts.Companies;
 using TwentyNet.Contracts.Files;
 
@@ -29,10 +31,33 @@ public sealed class CompaniesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<CompanyResponse>>> List(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResponse<CompanyResponse>>> List(
+        [FromQuery] Guid? viewId,
+        [FromQuery] string? search,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _sender.Send(new ListCompaniesQuery(), cancellationToken);
-        return Ok(_mapper.Map<IReadOnlyList<CompanyResponse>>(result));
+        var query = new ListCompaniesQuery(viewId, search, null, null, skip, take);
+        var result = await _sender.Send(query, cancellationToken);
+        return Ok(_mapper.Map<PagedResponse<CompanyResponse>>(result));
+    }
+
+    [HttpPost("search")]
+    public async Task<ActionResult<PagedResponse<CompanyResponse>>> Search(
+        [FromBody] CompanySearchRequest request,
+        CancellationToken cancellationToken)
+    {
+        var query = new ListCompaniesQuery(
+            request.ViewId,
+            request.Search,
+            request.Filters?.Select(f => new FilterInput(f.Field, f.Operator, f.Value)).ToList(),
+            request.Sorts?.Select(s => new SortInput(s.Field, s.Direction)).ToList(),
+            request.Skip,
+            request.Take);
+
+        var result = await _sender.Send(query, cancellationToken);
+        return Ok(_mapper.Map<PagedResponse<CompanyResponse>>(result));
     }
 
     [HttpGet("{id:guid}")]

@@ -2,6 +2,7 @@ using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using TwentyNet.Application.Common;
 using TwentyNet.Application.Files.AttachFileToPerson;
 using TwentyNet.Application.Files.ListPersonFiles;
 using TwentyNet.Application.People.CreatePerson;
@@ -9,6 +10,7 @@ using TwentyNet.Application.People.DeletePerson;
 using TwentyNet.Application.People.GetPersonById;
 using TwentyNet.Application.People.ListPeople;
 using TwentyNet.Application.People.UpdatePerson;
+using TwentyNet.Contracts.Common;
 using TwentyNet.Contracts.Files;
 using TwentyNet.Contracts.People;
 
@@ -29,10 +31,33 @@ public sealed class PeopleController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<PersonResponse>>> List(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResponse<PersonResponse>>> List(
+        [FromQuery] Guid? viewId,
+        [FromQuery] string? search,
+        [FromQuery] int skip = 0,
+        [FromQuery] int take = 50,
+        CancellationToken cancellationToken = default)
     {
-        var result = await _sender.Send(new ListPeopleQuery(), cancellationToken);
-        return Ok(_mapper.Map<IReadOnlyList<PersonResponse>>(result));
+        var query = new ListPeopleQuery(viewId, search, null, null, skip, take);
+        var result = await _sender.Send(query, cancellationToken);
+        return Ok(_mapper.Map<PagedResponse<PersonResponse>>(result));
+    }
+
+    [HttpPost("search")]
+    public async Task<ActionResult<PagedResponse<PersonResponse>>> Search(
+        [FromBody] PersonSearchRequest request,
+        CancellationToken cancellationToken)
+    {
+        var query = new ListPeopleQuery(
+            request.ViewId,
+            request.Search,
+            request.Filters?.Select(f => new FilterInput(f.Field, f.Operator, f.Value)).ToList(),
+            request.Sorts?.Select(s => new SortInput(s.Field, s.Direction)).ToList(),
+            request.Skip,
+            request.Take);
+
+        var result = await _sender.Send(query, cancellationToken);
+        return Ok(_mapper.Map<PagedResponse<PersonResponse>>(result));
     }
 
     [HttpGet("{id:guid}")]
