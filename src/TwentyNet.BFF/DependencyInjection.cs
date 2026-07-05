@@ -5,6 +5,7 @@ using Amazon.S3;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using TwentyNet.BFF.Hubs;
 using TwentyNet.BFF.Options;
 using TwentyNet.BFF.Services;
 using TwentyNet.Domain.Interfaces;
@@ -37,6 +38,21 @@ public static class DependencyInjection
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretKey)),
                     ClockSkew = TimeSpan.Zero
                 };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+
+                        if (!string.IsNullOrEmpty(accessToken))
+                        {
+                            context.Token = accessToken;
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
         services.AddAuthorization();
@@ -44,6 +60,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthContext, CurrentUserService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IPasswordService, PasswordService>();
+        services.AddScoped<IRealTimeNotifier, SignalRRealTimeNotifier>();
 
         services.AddHttpClient(HttpClientOptions.EnrichmentClientName, (provider, client) =>
         {
