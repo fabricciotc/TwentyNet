@@ -3,6 +3,7 @@ using System.Text;
 using NSubstitute;
 using TwentyNet.Application.Auth.RotateToken;
 using TwentyNet.Domain.Entities;
+using TwentyNet.Domain.Enums;
 using TwentyNet.Domain.Interfaces;
 using TwentyNet.Persistence.Repositories;
 
@@ -27,14 +28,22 @@ public sealed class RefreshTokenCommandHandlerTests : TestBase
             TokenHash = oldHash,
             ExpiresAt = DateTime.UtcNow.AddDays(7)
         });
+
+        await context.UserWorkspaceMemberships.AddAsync(new UserWorkspaceMembership
+        {
+            UserId = userId,
+            WorkspaceId = workspaceId,
+            Role = WorkspaceRole.Member
+        });
         await context.SaveChangesAsync();
 
         var refreshTokenRepository = new EfRepository<RefreshToken>(context);
+        var membershipRepository = new EfRepository<UserWorkspaceMembership>(context);
         var tokenService = Substitute.For<ITokenService>();
-        tokenService.GenerateAccessToken(userId, workspaceId).Returns("new-access-token");
+        tokenService.GenerateAccessToken(userId, workspaceId, WorkspaceRole.Member).Returns("new-access-token");
         tokenService.GenerateRefreshToken().Returns("new-refresh-token");
 
-        var handler = new RefreshTokenCommandHandler(refreshTokenRepository, tokenService);
+        var handler = new RefreshTokenCommandHandler(refreshTokenRepository, membershipRepository, tokenService);
 
         var command = new RefreshTokenCommand(refreshTokenValue);
 
@@ -73,8 +82,9 @@ public sealed class RefreshTokenCommandHandlerTests : TestBase
         await context.SaveChangesAsync();
 
         var refreshTokenRepository = new EfRepository<RefreshToken>(context);
+        var membershipRepository = new EfRepository<UserWorkspaceMembership>(context);
         var tokenService = Substitute.For<ITokenService>();
-        var handler = new RefreshTokenCommandHandler(refreshTokenRepository, tokenService);
+        var handler = new RefreshTokenCommandHandler(refreshTokenRepository, membershipRepository, tokenService);
 
         var command = new RefreshTokenCommand(refreshTokenValue);
 

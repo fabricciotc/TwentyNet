@@ -3,6 +3,7 @@ using System.Text;
 using NSubstitute;
 using TwentyNet.Application.Auth.RegisterUser;
 using TwentyNet.Domain.Entities;
+using TwentyNet.Domain.Enums;
 using TwentyNet.Domain.Interfaces;
 using TwentyNet.Persistence.Repositories;
 
@@ -23,7 +24,7 @@ public sealed class RegisterUserCommandHandlerTests : TestBase
         var tokenService = Substitute.For<ITokenService>();
 
         passwordService.Hash("Password123!").Returns("hashed-password");
-        tokenService.GenerateAccessToken(Arg.Any<Guid>(), Arg.Any<Guid>()).Returns("access-token");
+        tokenService.GenerateAccessToken(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<WorkspaceRole>()).Returns("access-token");
         tokenService.GenerateRefreshToken().Returns("refresh-token");
 
         var handler = new RegisterUserCommandHandler(
@@ -63,7 +64,7 @@ public sealed class RegisterUserCommandHandlerTests : TestBase
 
         var membership = context.UserWorkspaceMemberships.FirstOrDefault(m => m.UserId == user.Id && m.WorkspaceId == workspace.Id);
         Assert.NotNull(membership);
-        Assert.Equal("Member", membership.Role);
+        Assert.Equal(WorkspaceRole.Admin, membership.Role);
 
         var refreshTokenHash = HashToken("refresh-token");
         var storedToken = context.RefreshTokens.FirstOrDefault(t => t.TokenHash == refreshTokenHash);

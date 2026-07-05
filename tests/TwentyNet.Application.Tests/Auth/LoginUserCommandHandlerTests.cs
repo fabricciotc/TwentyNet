@@ -3,6 +3,7 @@ using System.Text;
 using NSubstitute;
 using TwentyNet.Application.Auth.LoginUser;
 using TwentyNet.Domain.Entities;
+using TwentyNet.Domain.Enums;
 using TwentyNet.Domain.Interfaces;
 using TwentyNet.Domain.ValueObjects;
 using TwentyNet.Persistence.Repositories;
@@ -35,7 +36,7 @@ public sealed class LoginUserCommandHandlerTests : TestBase
         {
             UserId = user.Id,
             WorkspaceId = workspace.Id,
-            Role = "Member"
+            Role = WorkspaceRole.Member
         };
         await context.UserWorkspaceMemberships.AddAsync(membership);
         await context.SaveChangesAsync();
@@ -47,7 +48,7 @@ public sealed class LoginUserCommandHandlerTests : TestBase
         var tokenService = Substitute.For<ITokenService>();
 
         passwordService.Verify("Password123!", "hashed-password").Returns(true);
-        tokenService.GenerateAccessToken(user.Id, workspace.Id).Returns("access-token");
+        tokenService.GenerateAccessToken(user.Id, workspace.Id, WorkspaceRole.Member).Returns("access-token");
         tokenService.GenerateRefreshToken().Returns("refresh-token");
 
         var handler = new LoginUserCommandHandler(
