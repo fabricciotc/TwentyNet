@@ -189,6 +189,50 @@ curl -X POST https://localhost:7001/api/auth/logout \
 | PUT | `/api/people/{id}` | Actualizar persona |
 | DELETE | `/api/people/{id}` | Eliminar persona |
 
+## Realtime (SignalR)
+
+El BFF expone un hub de SignalR en:
+
+```
+/hubs/workspace
+```
+
+### Autenticación
+
+SignalR usa el mismo JWT Bearer que la API HTTP. El token debe enviarse en el query string como `access_token` al conectar:
+
+```javascript
+const connection = new signalR.HubConnectionBuilder()
+    .withUrl("https://localhost:7001/hubs/workspace?access_token=ACCESS_TOKEN_AQUI")
+    .build();
+
+await connection.start();
+```
+
+> El token también se lee automáticamente del header `Authorization` si el transporte lo permite.
+
+### Eventos del servidor
+
+Una vez conectado, el cliente recibe eventos del workspace al que pertenece el token (claim `workspace_id`):
+
+| Evento | Payload | Descripción |
+|--------|---------|-------------|
+| `ObjectRecordChanged` | `{ objectName: "Company" \| "Person", recordId: Guid, changeType: "created" \| "updated" \| "deleted" }` | Notifica cambios en registros de Company o Person del workspace actual |
+
+**Ejemplo de manejo en JavaScript:**
+
+```javascript
+connection.on("ObjectRecordChanged", (objectName, recordId, changeType) => {
+    console.log(`${objectName} ${recordId} was ${changeType}`);
+});
+```
+
+### Implementación
+
+- El backend emite eventos de dominio (`ObjectRecordCreatedEvent`, `ObjectRecordUpdatedEvent`, `ObjectRecordDeletedEvent`) desde los handlers de Company y Person.
+- `SignalRRealTimeNotifier` traduce esos eventos a llamadas de grupo SignalR (`workspace:{workspaceId}`).
+- Los clientes se unen automáticamente al grupo de su workspace en `OnConnectedAsync` y se remueven en `OnDisconnectedAsync`.
+
 **Ejemplo POST /api/people:**
 
 ```json
