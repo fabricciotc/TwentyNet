@@ -8,6 +8,7 @@ using TwentyNet.Application.Tasks;
 using TwentyNet.Application.Timeline;
 using TwentyNet.Application.Views;
 using TwentyNet.Application.ApiKeys;
+using TwentyNet.Application.Chatbot;
 using TwentyNet.Application.Sso;
 using TwentyNet.Application.Sync;
 using TwentyNet.Application.Webhooks;
@@ -17,6 +18,7 @@ using TwentyNet.Contracts.ConnectedAccounts;
 using TwentyNet.Contracts.People;
 using TwentyNet.Contracts.Views;
 using TwentyNet.Contracts.ApiKeys;
+using TwentyNet.Contracts.Chatbot;
 using TwentyNet.Contracts.Sso;
 using TwentyNet.Contracts.Sync;
 using TwentyNet.Contracts.Webhooks;
@@ -65,5 +67,8 @@ public sealed class BffProfile : Profile
 
         CreateMap<EmailMessageDto, EmailMessageResponse>();
         CreateMap<CalendarEventDto, CalendarEventResponse>();
+
+        CreateMap<ChatSessionDto, ChatSessionResponse>();
+        CreateMap<ChatMessageDto, ChatMessageResponse>();
     }
 }

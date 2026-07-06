@@ -39,6 +39,8 @@ public sealed class AppDbContext : DbContext, IUnitOfWork
     public DbSet<SsoProvider> SsoProviders => Set<SsoProvider>();
     public DbSet<EmailMessage> EmailMessages => Set<EmailMessage>();
     public DbSet<CalendarEvent> CalendarEvents => Set<CalendarEvent>();
+    public DbSet<ChatSession> ChatSessions => Set<ChatSession>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

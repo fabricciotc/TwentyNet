@@ -15,6 +15,7 @@ using TwentyNet.Application.Workspaces;
 using TwentyNet.Application.ApiKeys;
 using TwentyNet.Application.Sso;
 using TwentyNet.Application.Sync;
+using TwentyNet.Application.Chatbot;
 using CompanyEntity = TwentyNet.Domain.Entities.Company;
 using ConnectedAccountEntity = TwentyNet.Domain.Entities.ConnectedAccount;
 using CustomFieldDefinitionEntity = TwentyNet.Domain.Entities.CustomFieldDefinition;
@@ -24,6 +25,8 @@ using ApiKeyEntity = TwentyNet.Domain.Entities.ApiKey;
 using SsoProviderEntity = TwentyNet.Domain.Entities.SsoProvider;
 using EmailMessageEntity = TwentyNet.Domain.Entities.EmailMessage;
 using CalendarEventEntity = TwentyNet.Domain.Entities.CalendarEvent;
+using ChatSessionEntity = TwentyNet.Domain.Entities.ChatSession;
+using ChatMessageEntity = TwentyNet.Domain.Entities.ChatMessage;
 using FileEntity = TwentyNet.Domain.Entities.File;
 using NoteEntity = TwentyNet.Domain.Entities.Note;
 using PersonEntity = TwentyNet.Domain.Entities.Person;
@@ -64,6 +67,8 @@ public sealed class ApplicationProfile : Profile
         CreateMap<SsoProviderEntity, SsoProviderDto>();
         CreateMap<EmailMessageEntity, EmailMessageDto>();
         CreateMap<CalendarEventEntity, CalendarEventDto>();
+        CreateMap<ChatSessionEntity, ChatSessionDto>();
+        CreateMap<ChatMessageEntity, ChatMessageDto>();
     }
 
     private static IReadOnlyList<string> DeserializeScopes(string scopes)

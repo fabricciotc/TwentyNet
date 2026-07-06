@@ -13,8 +13,8 @@ using TwentyNet.BFF.Auth;
 using TwentyNet.BFF.Hubs;
 using TwentyNet.BFF.Options;
 using TwentyNet.BFF.Services;
-using TwentyNet.Domain.Enums;
 using TwentyNet.Domain.Interfaces;
+using TwentyNet.Domain.Enums;
 using TwentyNet.Persistence.Options;
 
 namespace TwentyNet.BFF;
@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.Configure<ConnectionStringsOptions>(configuration.GetSection(ConnectionStringsOptions.SectionName));
         services.Configure<EnrichmentServiceOptions>(configuration.GetSection(EnrichmentServiceOptions.SectionName));
         services.Configure<WebhookServiceOptions>(configuration.GetSection(WebhookServiceOptions.SectionName));
+        services.Configure<AiChatbotOptions>(configuration.GetSection(AiChatbotOptions.SectionName));
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<StorageOptions>(configuration.GetSection(StorageOptions.SectionName));
 
@@ -112,6 +113,21 @@ public static class DependencyInjection
         });
 
         services.AddHttpClient(WebhookServiceOptions.ClientName);
+        services.AddHttpClient("AiChatbot");
+
+        services.AddScoped<IChatbotProvider>(provider =>
+        {
+            var options = provider.GetRequiredService<IOptions<AiChatbotOptions>>().Value;
+            if (string.Equals(options.Provider, "OpenAi", StringComparison.OrdinalIgnoreCase))
+            {
+                return new OpenAiChatbotProvider(
+                    provider.GetRequiredService<IHttpClientFactory>(),
+                    provider.GetRequiredService<IOptions<AiChatbotOptions>>(),
+                    provider.GetRequiredService<ILogger<OpenAiChatbotProvider>>());
+            }
+
+            return new StubChatbotProvider();
+        });
 
         AddStorage(services);
 
