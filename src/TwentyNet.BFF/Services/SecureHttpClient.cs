@@ -9,9 +9,9 @@ namespace TwentyNet.BFF.Services;
 public sealed class SecureHttpClient : ISecureHttpClient
 {
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly HttpClientOptions _options;
+    private readonly WebhookServiceOptions _options;
 
-    public SecureHttpClient(IHttpClientFactory httpClientFactory, IOptions<HttpClientOptions> options)
+    public SecureHttpClient(IHttpClientFactory httpClientFactory, IOptions<WebhookServiceOptions> options)
     {
         _httpClientFactory = httpClientFactory;
         _options = options.Value;
@@ -34,8 +34,8 @@ public sealed class SecureHttpClient : ISecureHttpClient
             await BlockPrivateNetworksAsync(uri, cancellationToken);
         }
 
-        var client = _httpClientFactory.CreateClient(HttpClientOptions.WebhookClientName);
-        client.Timeout = TimeSpan.FromSeconds(_options.WebhookTimeoutSeconds);
+        var client = _httpClientFactory.CreateClient(WebhookServiceOptions.ClientName);
+        client.Timeout = TimeSpan.FromSeconds(_options.TimeoutSeconds);
 
         return await client.PostAsync(uri, content, cancellationToken);
     }

@@ -11,9 +11,9 @@ public sealed class SecureHttpClientTests
     {
         var factory = Substitute.For<IHttpClientFactory>();
         factory.CreateClient(Arg.Any<string>()).Returns(new HttpClient());
-        var options = Options.Create(new HttpClientOptions
+        var options = Options.Create(new WebhookServiceOptions
         {
-            WebhookTimeoutSeconds = 5,
+            TimeoutSeconds = 5,
             SsrfBlockPrivateNetworks = blockPrivateNetworks
         });
         return new SecureHttpClient(factory, options);

@@ -24,7 +24,8 @@ public static class DependencyInjection
     public static IServiceCollection AddBffServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<ConnectionStringsOptions>(configuration.GetSection(ConnectionStringsOptions.SectionName));
-        services.Configure<HttpClientOptions>(configuration.GetSection(HttpClientOptions.SectionName));
+        services.Configure<EnrichmentServiceOptions>(configuration.GetSection(EnrichmentServiceOptions.SectionName));
+        services.Configure<WebhookServiceOptions>(configuration.GetSection(WebhookServiceOptions.SectionName));
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<StorageOptions>(configuration.GetSection(StorageOptions.SectionName));
 
@@ -100,14 +101,14 @@ public static class DependencyInjection
 
         services.AddDataProtection();
 
-        services.AddHttpClient(HttpClientOptions.EnrichmentClientName, (provider, client) =>
+        services.AddHttpClient(EnrichmentServiceOptions.ClientName, (provider, client) =>
         {
-            var options = provider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
-            client.BaseAddress = new Uri(options.EnrichmentBaseAddress);
-            client.Timeout = TimeSpan.FromSeconds(options.EnrichmentTimeoutSeconds);
+            var options = provider.GetRequiredService<IOptions<EnrichmentServiceOptions>>().Value;
+            client.BaseAddress = new Uri(options.BaseAddress);
+            client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds);
         });
 
-        services.AddHttpClient(HttpClientOptions.WebhookClientName);
+        services.AddHttpClient(WebhookServiceOptions.ClientName);
 
         AddStorage(services);
 
