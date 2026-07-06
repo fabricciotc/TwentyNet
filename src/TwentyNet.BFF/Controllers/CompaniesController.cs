@@ -12,6 +12,9 @@ using TwentyNet.Application.Companies.UpdateCompany;
 using TwentyNet.Application.Companies.UpdateCompanyCustomFields;
 using TwentyNet.Application.Files.AttachFileToCompany;
 using TwentyNet.Application.Files.ListCompanyFiles;
+using TwentyNet.Application.ImportExport;
+using TwentyNet.Application.ImportExport.ExportCompanies;
+using TwentyNet.Application.ImportExport.ImportCompanies;
 using TwentyNet.Contracts.Common;
 using TwentyNet.Contracts.Companies;
 using TwentyNet.Contracts.Files;
@@ -112,5 +115,25 @@ public sealed class CompaniesController : ControllerBase
     {
         await _sender.Send(new UpdateCompanyCustomFieldsCommand(id, customFields), cancellationToken);
         return NoContent();
+    }
+
+    [HttpPost("import")]
+    public async Task<ActionResult<ImportResult>> Import(IFormFile file, CancellationToken cancellationToken)
+    {
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest("CSV file is required.");
+        }
+
+        await using var stream = file.OpenReadStream();
+        var result = await _sender.Send(new ImportCompaniesCommand(stream), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("export")]
+    public async Task<IActionResult> Export(CancellationToken cancellationToken)
+    {
+        var bytes = await _sender.Send(new ExportCompaniesQuery(), cancellationToken);
+        return File(bytes, "text/csv", $"companies-{DateTime.UtcNow:yyyyMMddHHmmss}.csv");
     }
 }

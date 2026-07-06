@@ -12,6 +12,9 @@ using TwentyNet.Application.People.GetPersonById;
 using TwentyNet.Application.People.ListPeople;
 using TwentyNet.Application.People.UpdatePerson;
 using TwentyNet.Application.People.UpdatePersonCustomFields;
+using TwentyNet.Application.ImportExport;
+using TwentyNet.Application.ImportExport.ExportPeople;
+using TwentyNet.Application.ImportExport.ImportPeople;
 using TwentyNet.Contracts.Common;
 using TwentyNet.Contracts.Files;
 using TwentyNet.Contracts.People;
@@ -125,5 +128,25 @@ public sealed class PeopleController : ControllerBase
     {
         await _sender.Send(new UpdatePersonCustomFieldsCommand(id, customFields), cancellationToken);
         return NoContent();
+    }
+
+    [HttpPost("import")]
+    public async Task<ActionResult<ImportResult>> Import(IFormFile file, CancellationToken cancellationToken)
+    {
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest("CSV file is required.");
+        }
+
+        await using var stream = file.OpenReadStream();
+        var result = await _sender.Send(new ImportPeopleCommand(stream), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("export")]
+    public async Task<IActionResult> Export(CancellationToken cancellationToken)
+    {
+        var bytes = await _sender.Send(new ExportPeopleQuery(), cancellationToken);
+        return File(bytes, "text/csv", $"people-{DateTime.UtcNow:yyyyMMddHHmmss}.csv");
     }
 }
