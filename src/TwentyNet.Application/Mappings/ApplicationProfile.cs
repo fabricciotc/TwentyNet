@@ -12,11 +12,13 @@ using TwentyNet.Application.Views;
 using TwentyNet.Application.Webhooks;
 using TwentyNet.Application.Workflows;
 using TwentyNet.Application.Workspaces;
+using TwentyNet.Application.ApiKeys;
 using CompanyEntity = TwentyNet.Domain.Entities.Company;
 using ConnectedAccountEntity = TwentyNet.Domain.Entities.ConnectedAccount;
 using CustomFieldDefinitionEntity = TwentyNet.Domain.Entities.CustomFieldDefinition;
 using RecordRelationEntity = TwentyNet.Domain.Entities.RecordRelation;
 using WorkflowEntity = TwentyNet.Domain.Entities.Workflow;
+using ApiKeyEntity = TwentyNet.Domain.Entities.ApiKey;
 using FileEntity = TwentyNet.Domain.Entities.File;
 using NoteEntity = TwentyNet.Domain.Entities.Note;
 using PersonEntity = TwentyNet.Domain.Entities.Person;
@@ -52,6 +54,19 @@ public sealed class ApplicationProfile : Profile
         CreateMap<RecordRelationEntity, RecordRelationDto>();
         CreateMap<WorkflowEntity, WorkflowDto>()
             .ForMember(dest => dest.Actions, opt => opt.MapFrom(src => DeserializeActions(src.Actions)));
+        CreateMap<ApiKeyEntity, ApiKeyDto>()
+            .ForMember(dest => dest.Scopes, opt => opt.MapFrom(src => DeserializeScopes(src.Scopes)));
+    }
+
+    private static IReadOnlyList<string> DeserializeScopes(string scopes)
+    {
+        if (string.IsNullOrWhiteSpace(scopes))
+        {
+            return new List<string>();
+        }
+
+        var deserialized = System.Text.Json.JsonSerializer.Deserialize<List<string>>(scopes);
+        return deserialized ?? new List<string>();
     }
 
     private static IReadOnlyList<Domain.Workflows.WorkflowActionConfig> DeserializeActions(string actions)

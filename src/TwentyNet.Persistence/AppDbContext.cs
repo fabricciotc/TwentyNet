@@ -35,6 +35,7 @@ public sealed class AppDbContext : DbContext, IUnitOfWork
     public DbSet<CustomFieldDefinition> CustomFieldDefinitions => Set<CustomFieldDefinition>();
     public DbSet<RecordRelation> RecordRelations => Set<RecordRelation>();
     public DbSet<Workflow> Workflows => Set<Workflow>();
+    public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

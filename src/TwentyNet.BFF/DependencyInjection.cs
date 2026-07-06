@@ -2,12 +2,14 @@ using System.Text;
 using Amazon;
 using Amazon.Runtime;
 using Amazon.S3;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using TwentyNet.Application.Webhooks;
+using TwentyNet.BFF.Auth;
 using TwentyNet.BFF.Hubs;
 using TwentyNet.BFF.Options;
 using TwentyNet.BFF.Services;
@@ -28,8 +30,13 @@ public static class DependencyInjection
 
         var jwtOptions = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
 
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
+        services.AddAuthentication(options =>
+            {
+                options.DefaultScheme = "JwtOrApiKey";
+                options.DefaultAuthenticateScheme = "JwtOrApiKey";
+                options.DefaultChallengeScheme = "JwtOrApiKey";
+            })
+            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
@@ -56,6 +63,19 @@ public static class DependencyInjection
 
                         return Task.CompletedTask;
                     }
+                };
+            })
+            .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(ApiKeyAuthenticationHandler.SchemeName, _ => { })
+            .AddPolicyScheme("JwtOrApiKey", "JWT or API Key", options =>
+            {
+                options.ForwardDefaultSelector = context =>
+                {
+                    if (context.Request.Headers.ContainsKey(ApiKeyAuthenticationHandler.HeaderName))
+                    {
+                        return ApiKeyAuthenticationHandler.SchemeName;
+                    }
+
+                    return JwtBearerDefaults.AuthenticationScheme;
                 };
             });
 
