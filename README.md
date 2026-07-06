@@ -11,6 +11,7 @@ Reescritura progresiva del backend de [Twenty CRM](https://github.com/twentyhq/t
 - **FluentValidation** para validación de inputs
 - **AutoMapper** para mapeo entre entidades, DTOs y contracts
 - **SignalR** para notificaciones en tiempo real
+- **Hot Chocolate 13** para adaptador GraphQL que emula el schema de Twenty
 - **xUnit + NSubstitute + EF Core InMemory** para tests
 - **JWT Bearer** + **BCrypt** para autenticación custom
 - **S3 / Local** storage de archivos mediante `IStorageDriver`
@@ -147,7 +148,69 @@ dotnet run --project src/TwentyNet.BFF
 ```
 
 La API expone Swagger en: `https://localhost:7001/swagger` (puerto puede variar).  
+El endpoint GraphQL está en `/graphql` con Banana Cake Pop en `/graphql/ui`.  
 El SPA se sirve en la raíz del mismo origen gracias a `MapFallbackToFile("index.html")`.
+
+## GraphQL
+
+El BFF expone un adaptador GraphQL con **Hot Chocolate** que emula el schema público de Twenty CRM. Los resolvers delegan en los mismos commands/queries de MediatR que usa la API REST, por lo que la lógica de negocio no se duplica.
+
+### Endpoint
+
+- URL: `https://localhost:7001/graphql`
+- IDE/Banana Cake Pop: `https://localhost:7001/graphql/ui`
+
+### Queries principales
+
+| Query | Descripción |
+|-------|-------------|
+| `companies` | Listar empresas del workspace actual |
+| `company(id: UUID!)` | Obtener empresa por id |
+| `people` | Listar personas del workspace actual |
+| `person(id: UUID!)` | Obtener persona por id |
+| `views(objectName: String!)` | Listar vistas de un objeto (`Company` o `Person`) |
+
+### Mutations principales
+
+| Mutation | Descripción |
+|----------|-------------|
+| `login(input: LoginInput!)` | Autenticar usuario y obtener JWT |
+| `createCompany(input: CreateCompanyInput!)` | Crear empresa |
+| `updateCompany(id: UUID!, input: UpdateCompanyInput!)` | Actualizar empresa |
+| `deleteCompany(id: UUID!)` | Eliminar empresa |
+| `createPerson(input: CreatePersonInput!)` | Crear persona |
+| `updatePerson(id: UUID!, input: UpdatePersonInput!)` | Actualizar persona |
+| `deletePerson(id: UUID!)` | Eliminar persona |
+
+### Autenticación en GraphQL
+
+Envía el token JWT en el header `Authorization: Bearer ACCESS_TOKEN_AQUI`. El middleware de Hot Chocolate valida el token y expone `IAuthContext` a los resolvers. La mutation `login` es pública.
+
+### Ejemplo
+
+```graphql
+query {
+  companies {
+    id
+    name
+    domain
+    createdAt
+  }
+}
+```
+
+```graphql
+mutation {
+  login(input: { email: "user@example.com", password: "Password123!", workspaceId: "WORKSPACE_ID" }) {
+    accessToken
+    refreshToken
+    user { id email }
+    workspace { id name }
+  }
+}
+```
+
+> El schema GraphQL es un subconjunto compatible del schema de Twenty CRM. Se irá extendiendo a medida que se migren más funciones.
 
 ## Autenticación
 
@@ -451,9 +514,11 @@ dotnet test
 - **Refresh token rotation**: cada uso de `/api/auth/refresh` revoca el token anterior y emite uno nuevo.
 - **SignalR**: notificaciones en tiempo real por workspace mediante grupos (`workspace:{id}`).
 - **SPA servido por el BFF**: los archivos estáticos de `src/TwentyNet.BFF/Frontend` se sirven con `StaticFileOptions` apuntando a esa carpeta y el fallback resuelve `index.html`.
+- **Adaptador GraphQL con Hot Chocolate**: el schema expuesto por el BFF emula el de Twenty CRM y delega a MediatR, manteniendo la lógica de negocio en `Application` y conviviendo con los controllers REST existentes.
 
 ## Limitaciones conocidas
 
 - AutoMapper tiene una advertencia de vulnerabilidad conocida (NU1903 / GHSA-rvv3-g6hj-g44x) en las versiones disponibles para .NET 8; se suprime el warning mientras se espera un patch o se evalúa reemplazo por mapeo manual.
 - No hay seed automático de datos.
 - Billing y AI chatbot usan implementaciones stub por defecto; se proveen abstracciones listas para integrar proveedores reales.
+- El build del frontend real de Twenty CRM (`twenty-front`) no pudo completarse en este entorno local (proceso de `twenty-ui:build` se atascó sin actividad de CPU). El BFF continúa sirviendo el SPA estático de desarrollo ubicado en `src/TwentyNet.BFF/Frontend/`. Para usar el UI oficial de Twenty hay que compilarlo externamente y copiar los artefactos a esa carpeta.

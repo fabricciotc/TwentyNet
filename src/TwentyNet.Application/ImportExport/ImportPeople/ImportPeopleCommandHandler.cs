@@ -118,7 +118,7 @@ public sealed class ImportPeopleCommandHandler : IRequestHandler<ImportPeopleCom
 
             var emailValue = email.Value;
             var existingList = await _personRepository.ListAsync(
-                p => p.WorkspaceId == workspaceId && p.Email != null && p.Email.Value == emailValue,
+                p => p.WorkspaceId == workspaceId && p.Email != null && p.Email == email,
                 cancellationToken);
             var existing = existingList.FirstOrDefault();
 

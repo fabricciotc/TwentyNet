@@ -43,7 +43,7 @@ public sealed class InviteMemberCommandHandler : IRequestHandler<InviteMemberCom
         var normalizedEmail = request.Email.Trim().ToLowerInvariant();
 
         var users = await _userRepository.ListAsync(
-            u => u.Email.Value == normalizedEmail,
+            u => u.Email == new Domain.ValueObjects.Email(normalizedEmail),
             cancellationToken);
         var invitedUser = users.FirstOrDefault();
 

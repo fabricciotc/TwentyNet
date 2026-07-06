@@ -36,8 +36,9 @@ public sealed class RegisterUserCommandHandler : IRequestHandler<RegisterUserCom
 
     public async Task<AuthResponse> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
+        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
         var existingUsers = await _userRepository.ListAsync(
-            u => u.Email.Value == request.Email.Trim().ToLowerInvariant(),
+            u => u.Email == new Domain.ValueObjects.Email(normalizedEmail),
             cancellationToken);
 
         if (existingUsers.Count > 0)

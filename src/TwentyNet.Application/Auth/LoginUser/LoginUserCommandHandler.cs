@@ -30,8 +30,9 @@ public sealed class LoginUserCommandHandler : IRequestHandler<LoginUserCommand, 
 
     public async Task<AuthResponse> Handle(LoginUserCommand request, CancellationToken cancellationToken)
     {
+        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
         var users = await _userRepository.ListAsync(
-            u => u.Email.Value == request.Email.Trim().ToLowerInvariant(),
+            u => u.Email == new Domain.ValueObjects.Email(normalizedEmail),
             cancellationToken);
 
         var user = users.FirstOrDefault();

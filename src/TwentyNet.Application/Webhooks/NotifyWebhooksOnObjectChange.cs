@@ -48,9 +48,11 @@ public sealed class NotifyWebhooksOnObjectChange :
 
         var eventName = $"{objectName.ToLowerInvariant()}.{changeType}";
 
-        var webhooks = await _repository.ListAsync(
-            w => w.WorkspaceId == workspaceId && w.IsActive && w.Events.Contains(eventName),
+        var activeWebhooks = await _repository.ListAsync(
+            w => w.WorkspaceId == workspaceId && w.IsActive,
             cancellationToken);
+
+        var webhooks = activeWebhooks.Where(w => w.Events.Contains(eventName)).ToList();
 
         var payload = new WebhookPayload(
             eventName,

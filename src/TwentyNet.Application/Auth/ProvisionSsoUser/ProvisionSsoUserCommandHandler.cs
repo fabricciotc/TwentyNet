@@ -30,7 +30,7 @@ public sealed class ProvisionSsoUserCommandHandler : IRequestHandler<ProvisionSs
         var email = new Email(request.Email);
 
         var users = await _userRepository.ListAsync(
-            u => u.Email != null && u.Email.Value == email.Value,
+            u => u.Email != null && u.Email == email,
             cancellationToken);
         var user = users.FirstOrDefault();
 
