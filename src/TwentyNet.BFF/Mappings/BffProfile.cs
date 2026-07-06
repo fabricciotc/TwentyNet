@@ -8,11 +8,13 @@ using TwentyNet.Application.Tasks;
 using TwentyNet.Application.Timeline;
 using TwentyNet.Application.Views;
 using TwentyNet.Application.Webhooks;
+using TwentyNet.Application.Workflows;
 using TwentyNet.Contracts.Companies;
 using TwentyNet.Contracts.ConnectedAccounts;
 using TwentyNet.Contracts.People;
 using TwentyNet.Contracts.Views;
 using TwentyNet.Contracts.Webhooks;
+using TwentyNet.Contracts.Workflows;
 using ApplicationFileResponse = TwentyNet.Application.Files.FileResponse;
 using ApplicationFileUploadResponse = TwentyNet.Application.Files.FileUploadResponse;
 
@@ -40,5 +42,12 @@ public sealed class BffProfile : Profile
         CreateMap<TimelineActivityDto, Contracts.Timeline.TimelineActivityResponse>()
             .ForMember(dest => dest.ActivityType, opt => opt.MapFrom(src => src.ActivityType));
         CreateMap(typeof(Application.Common.PagedResult<>), typeof(Contracts.Common.PagedResponse<>));
+
+        CreateMap<WorkflowDto, WorkflowResponse>()
+            .ForMember(dest => dest.TriggerType, opt => opt.MapFrom(src => src.TriggerType.ToString()));
+        CreateMap<TwentyNet.Domain.Workflows.WorkflowActionConfig, WorkflowActionResponse>()
+            .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()));
+        CreateMap<WorkflowActionRequest, TwentyNet.Domain.Workflows.WorkflowActionConfig>()
+            .ForMember(dest => dest.Type, opt => opt.MapFrom(src => Enum.Parse<TwentyNet.Domain.Enums.WorkflowActionType>(src.Type, true)));
     }
 }

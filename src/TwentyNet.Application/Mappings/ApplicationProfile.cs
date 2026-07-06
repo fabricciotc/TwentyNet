@@ -10,11 +10,13 @@ using TwentyNet.Application.Tasks;
 using TwentyNet.Application.Timeline;
 using TwentyNet.Application.Views;
 using TwentyNet.Application.Webhooks;
+using TwentyNet.Application.Workflows;
 using TwentyNet.Application.Workspaces;
 using CompanyEntity = TwentyNet.Domain.Entities.Company;
 using ConnectedAccountEntity = TwentyNet.Domain.Entities.ConnectedAccount;
 using CustomFieldDefinitionEntity = TwentyNet.Domain.Entities.CustomFieldDefinition;
 using RecordRelationEntity = TwentyNet.Domain.Entities.RecordRelation;
+using WorkflowEntity = TwentyNet.Domain.Entities.Workflow;
 using FileEntity = TwentyNet.Domain.Entities.File;
 using NoteEntity = TwentyNet.Domain.Entities.Note;
 using PersonEntity = TwentyNet.Domain.Entities.Person;
@@ -48,5 +50,18 @@ public sealed class ApplicationProfile : Profile
         CreateMap<TimelineActivityEntity, TimelineActivityDto>();
         CreateMap<CustomFieldDefinitionEntity, CustomFieldDefinitionDto>();
         CreateMap<RecordRelationEntity, RecordRelationDto>();
+        CreateMap<WorkflowEntity, WorkflowDto>()
+            .ForMember(dest => dest.Actions, opt => opt.MapFrom(src => DeserializeActions(src.Actions)));
+    }
+
+    private static IReadOnlyList<Domain.Workflows.WorkflowActionConfig> DeserializeActions(string actions)
+    {
+        if (string.IsNullOrWhiteSpace(actions))
+        {
+            return new List<Domain.Workflows.WorkflowActionConfig>();
+        }
+
+        var deserialized = System.Text.Json.JsonSerializer.Deserialize<List<Domain.Workflows.WorkflowActionConfig>>(actions);
+        return deserialized ?? new List<Domain.Workflows.WorkflowActionConfig>();
     }
 }

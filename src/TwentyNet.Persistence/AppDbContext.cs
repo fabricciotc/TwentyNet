@@ -34,6 +34,7 @@ public sealed class AppDbContext : DbContext, IUnitOfWork
     public DbSet<TimelineActivity> TimelineActivities => Set<TimelineActivity>();
     public DbSet<CustomFieldDefinition> CustomFieldDefinitions => Set<CustomFieldDefinition>();
     public DbSet<RecordRelation> RecordRelations => Set<RecordRelation>();
+    public DbSet<Workflow> Workflows => Set<Workflow>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
