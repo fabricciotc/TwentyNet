@@ -26,4 +26,10 @@
     <ProjectReference Include="..\TwentyNet.Contracts\TwentyNet.Contracts.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="Frontend\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

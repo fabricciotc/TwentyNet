@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TwentyNet.Application/TwentyNet.Application.csproj" />
+    <Project Path="src/TwentyNet.BFF/TwentyNet.BFF.csproj" />
+    <Project Path="src/TwentyNet.Contracts/TwentyNet.Contracts.csproj" />
+    <Project Path="src/TwentyNet.Domain/TwentyNet.Domain.csproj" />
+    <Project Path="src/TwentyNet.Persistence/TwentyNet.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TwentyNet.Application.Tests/TwentyNet.Application.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -23,9 +23,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<WorkspaceHub>("/hubs/workspace");
+app.MapFallbackToFile("Frontend/index.html");
 
 app.Run();

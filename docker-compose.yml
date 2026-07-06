@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: twentynet_postgres
+    environment:
+      POSTGRES_DB: twentynet
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d twentynet"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: twentynet_redis
+    ports:
+      - "6379:6379"
+
+  bff:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: twentynet_bff
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "5000:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Database=twentynet;Username=postgres;Password=postgres"
+      Jwt__SecretKey: "your-super-secret-key-min-32-chars!"
+      Jwt__Issuer: "TwentyNet"
+      Jwt__Audience: "TwentyNet"
+      Storage__Provider: "Local"
+      Storage__LocalPath: "./storage"
+    volumes:
+      - bff_storage:/app/storage
+
+volumes:
+  postgres_data:
+  bff_storage:

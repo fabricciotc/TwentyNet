@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TwentyNet</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="app-header" id="header" style="display:none;">
+      <div class="brand">TwentyNet</div>
+      <nav class="nav">
+        <a href="#companies">Companies</a>
+        <a href="#people">People</a>
+        <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+      </nav>
+    </header>
+
+    <main id="main"></main>
+
+    <footer class="app-footer">
+      <span id="connectionStatus" class="status disconnected">SignalR: offline</span>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
