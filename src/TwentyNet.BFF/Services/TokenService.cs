@@ -47,4 +47,6 @@ public sealed class TokenService : ITokenService
         var randomBytes = RandomNumberGenerator.GetBytes(64);
         return Convert.ToBase64String(randomBytes);
     }
+
+    public int AccessTokenExpirationMinutes => _options.AccessTokenExpirationMinutes;
 }

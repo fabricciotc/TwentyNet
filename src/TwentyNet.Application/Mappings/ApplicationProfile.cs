@@ -13,12 +13,14 @@ using TwentyNet.Application.Webhooks;
 using TwentyNet.Application.Workflows;
 using TwentyNet.Application.Workspaces;
 using TwentyNet.Application.ApiKeys;
+using TwentyNet.Application.Sso;
 using CompanyEntity = TwentyNet.Domain.Entities.Company;
 using ConnectedAccountEntity = TwentyNet.Domain.Entities.ConnectedAccount;
 using CustomFieldDefinitionEntity = TwentyNet.Domain.Entities.CustomFieldDefinition;
 using RecordRelationEntity = TwentyNet.Domain.Entities.RecordRelation;
 using WorkflowEntity = TwentyNet.Domain.Entities.Workflow;
 using ApiKeyEntity = TwentyNet.Domain.Entities.ApiKey;
+using SsoProviderEntity = TwentyNet.Domain.Entities.SsoProvider;
 using FileEntity = TwentyNet.Domain.Entities.File;
 using NoteEntity = TwentyNet.Domain.Entities.Note;
 using PersonEntity = TwentyNet.Domain.Entities.Person;
@@ -56,6 +58,7 @@ public sealed class ApplicationProfile : Profile
             .ForMember(dest => dest.Actions, opt => opt.MapFrom(src => DeserializeActions(src.Actions)));
         CreateMap<ApiKeyEntity, ApiKeyDto>()
             .ForMember(dest => dest.Scopes, opt => opt.MapFrom(src => DeserializeScopes(src.Scopes)));
+        CreateMap<SsoProviderEntity, SsoProviderDto>();
     }
 
     private static IReadOnlyList<string> DeserializeScopes(string scopes)

@@ -98,6 +98,7 @@ public static class DependencyInjection
         services.AddScoped<IWebhookDeliveryService, WebhookDeliveryService>();
         services.AddSingleton<ITokenEncryptionService, TokenEncryptionService>();
         services.AddScoped<ISecureHttpClient, SecureHttpClient>();
+        services.AddScoped<SamlService>();
 
         services.AddDataProtection();
 

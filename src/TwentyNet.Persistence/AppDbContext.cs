@@ -36,6 +36,7 @@ public sealed class AppDbContext : DbContext, IUnitOfWork
     public DbSet<RecordRelation> RecordRelations => Set<RecordRelation>();
     public DbSet<Workflow> Workflows => Set<Workflow>();
     public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
+    public DbSet<SsoProvider> SsoProviders => Set<SsoProvider>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
