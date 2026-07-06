@@ -16,6 +16,7 @@ using TwentyNet.Application.ApiKeys;
 using TwentyNet.Application.Sso;
 using TwentyNet.Application.Sync;
 using TwentyNet.Application.Chatbot;
+using TwentyNet.Application.Billing;
 using CompanyEntity = TwentyNet.Domain.Entities.Company;
 using ConnectedAccountEntity = TwentyNet.Domain.Entities.ConnectedAccount;
 using CustomFieldDefinitionEntity = TwentyNet.Domain.Entities.CustomFieldDefinition;
@@ -27,6 +28,9 @@ using EmailMessageEntity = TwentyNet.Domain.Entities.EmailMessage;
 using CalendarEventEntity = TwentyNet.Domain.Entities.CalendarEvent;
 using ChatSessionEntity = TwentyNet.Domain.Entities.ChatSession;
 using ChatMessageEntity = TwentyNet.Domain.Entities.ChatMessage;
+using SubscriptionPlanEntity = TwentyNet.Domain.Entities.SubscriptionPlan;
+using WorkspaceSubscriptionEntity = TwentyNet.Domain.Entities.WorkspaceSubscription;
+using InvoiceEntity = TwentyNet.Domain.Entities.Invoice;
 using FileEntity = TwentyNet.Domain.Entities.File;
 using NoteEntity = TwentyNet.Domain.Entities.Note;
 using PersonEntity = TwentyNet.Domain.Entities.Person;
@@ -69,6 +73,22 @@ public sealed class ApplicationProfile : Profile
         CreateMap<CalendarEventEntity, CalendarEventDto>();
         CreateMap<ChatSessionEntity, ChatSessionDto>();
         CreateMap<ChatMessageEntity, ChatMessageDto>();
+        CreateMap<SubscriptionPlanEntity, SubscriptionPlanDto>()
+            .ForMember(dest => dest.Features, opt => opt.MapFrom(src => DeserializeFeatures(src.Features)));
+        CreateMap<WorkspaceSubscriptionEntity, WorkspaceSubscriptionDto>()
+            .ForMember(dest => dest.PlanName, opt => opt.MapFrom(src => src.Plan.Name));
+        CreateMap<InvoiceEntity, InvoiceDto>();
+    }
+
+    private static IReadOnlyList<string> DeserializeFeatures(string features)
+    {
+        if (string.IsNullOrWhiteSpace(features))
+        {
+            return new List<string>();
+        }
+
+        var deserialized = System.Text.Json.JsonSerializer.Deserialize<List<string>>(features);
+        return deserialized ?? new List<string>();
     }
 
     private static IReadOnlyList<string> DeserializeScopes(string scopes)

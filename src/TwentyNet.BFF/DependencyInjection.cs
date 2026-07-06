@@ -102,6 +102,7 @@ public static class DependencyInjection
         services.AddScoped<SamlService>();
         services.AddSingleton<IEmailCalendarSyncProvider, StubEmailCalendarSyncProvider>();
         services.AddHostedService<EmailCalendarSyncHostedService>();
+        services.AddScoped<IBillingService, StubBillingService>();
 
         services.AddDataProtection();
 

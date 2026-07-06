@@ -8,6 +8,7 @@ using TwentyNet.Application.Tasks;
 using TwentyNet.Application.Timeline;
 using TwentyNet.Application.Views;
 using TwentyNet.Application.ApiKeys;
+using TwentyNet.Application.Billing;
 using TwentyNet.Application.Chatbot;
 using TwentyNet.Application.Sso;
 using TwentyNet.Application.Sync;
@@ -18,6 +19,7 @@ using TwentyNet.Contracts.ConnectedAccounts;
 using TwentyNet.Contracts.People;
 using TwentyNet.Contracts.Views;
 using TwentyNet.Contracts.ApiKeys;
+using TwentyNet.Contracts.Billing;
 using TwentyNet.Contracts.Chatbot;
 using TwentyNet.Contracts.Sso;
 using TwentyNet.Contracts.Sync;
@@ -70,5 +72,12 @@ public sealed class BffProfile : Profile
 
         CreateMap<ChatSessionDto, ChatSessionResponse>();
         CreateMap<ChatMessageDto, ChatMessageResponse>();
+
+        CreateMap<SubscriptionPlanDto, SubscriptionPlanResponse>()
+            .ForMember(dest => dest.Interval, opt => opt.MapFrom(src => src.Interval.ToString()));
+        CreateMap<WorkspaceSubscriptionDto, WorkspaceSubscriptionResponse>()
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
+        CreateMap<InvoiceDto, InvoiceResponse>()
+            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()));
     }
 }
