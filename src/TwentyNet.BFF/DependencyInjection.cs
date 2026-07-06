@@ -99,6 +99,8 @@ public static class DependencyInjection
         services.AddSingleton<ITokenEncryptionService, TokenEncryptionService>();
         services.AddScoped<ISecureHttpClient, SecureHttpClient>();
         services.AddScoped<SamlService>();
+        services.AddSingleton<IEmailCalendarSyncProvider, StubEmailCalendarSyncProvider>();
+        services.AddHostedService<EmailCalendarSyncHostedService>();
 
         services.AddDataProtection();
 

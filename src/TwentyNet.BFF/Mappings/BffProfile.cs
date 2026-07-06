@@ -9,6 +9,7 @@ using TwentyNet.Application.Timeline;
 using TwentyNet.Application.Views;
 using TwentyNet.Application.ApiKeys;
 using TwentyNet.Application.Sso;
+using TwentyNet.Application.Sync;
 using TwentyNet.Application.Webhooks;
 using TwentyNet.Application.Workflows;
 using TwentyNet.Contracts.Companies;
@@ -17,6 +18,7 @@ using TwentyNet.Contracts.People;
 using TwentyNet.Contracts.Views;
 using TwentyNet.Contracts.ApiKeys;
 using TwentyNet.Contracts.Sso;
+using TwentyNet.Contracts.Sync;
 using TwentyNet.Contracts.Webhooks;
 using TwentyNet.Contracts.Workflows;
 using ApplicationFileResponse = TwentyNet.Application.Files.FileResponse;
@@ -60,5 +62,8 @@ public sealed class BffProfile : Profile
 
         CreateMap<SsoProviderDto, SsoProviderResponse>()
             .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type.ToString()));
+
+        CreateMap<EmailMessageDto, EmailMessageResponse>();
+        CreateMap<CalendarEventDto, CalendarEventResponse>();
     }
 }

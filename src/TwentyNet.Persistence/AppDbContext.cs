@@ -37,6 +37,8 @@ public sealed class AppDbContext : DbContext, IUnitOfWork
     public DbSet<Workflow> Workflows => Set<Workflow>();
     public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
     public DbSet<SsoProvider> SsoProviders => Set<SsoProvider>();
+    public DbSet<EmailMessage> EmailMessages => Set<EmailMessage>();
+    public DbSet<CalendarEvent> CalendarEvents => Set<CalendarEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

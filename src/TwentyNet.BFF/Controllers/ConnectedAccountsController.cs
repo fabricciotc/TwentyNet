@@ -6,7 +6,11 @@ using TwentyNet.Application.ConnectedAccounts.CreateConnectedAccount;
 using TwentyNet.Application.ConnectedAccounts.DeleteConnectedAccount;
 using TwentyNet.Application.ConnectedAccounts.GetConnectedAccountById;
 using TwentyNet.Application.ConnectedAccounts.ListConnectedAccounts;
+using TwentyNet.Application.Sync.ListCalendarEvents;
+using TwentyNet.Application.Sync.ListEmailMessages;
+using TwentyNet.Application.Sync.SyncConnectedAccount;
 using TwentyNet.Contracts.ConnectedAccounts;
+using TwentyNet.Contracts.Sync;
 using TwentyNet.Domain.Enums;
 
 namespace TwentyNet.BFF.Controllers;
@@ -64,5 +68,26 @@ public sealed class ConnectedAccountsController : ControllerBase
     {
         await _sender.Send(new DeleteConnectedAccountCommand(id), cancellationToken);
         return NoContent();
+    }
+
+    [HttpPost("{id:guid}/sync")]
+    public async Task<ActionResult<SyncResultResponse>> Sync(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new SyncConnectedAccountCommand(id), cancellationToken);
+        return Ok(new SyncResultResponse(result.EmailsSynced, result.EventsSynced));
+    }
+
+    [HttpGet("{id:guid}/emails")]
+    public async Task<ActionResult<IReadOnlyList<EmailMessageResponse>>> ListEmails(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new ListEmailMessagesQuery(id), cancellationToken);
+        return Ok(_mapper.Map<IReadOnlyList<EmailMessageResponse>>(result));
+    }
+
+    [HttpGet("{id:guid}/events")]
+    public async Task<ActionResult<IReadOnlyList<CalendarEventResponse>>> ListEvents(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new ListCalendarEventsQuery(id), cancellationToken);
+        return Ok(_mapper.Map<IReadOnlyList<CalendarEventResponse>>(result));
     }
 }
