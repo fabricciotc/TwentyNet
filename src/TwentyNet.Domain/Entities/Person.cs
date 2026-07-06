@@ -14,4 +14,5 @@ public sealed class Person : BaseEntity
     public Guid WorkspaceId { get; set; }
     public Workspace Workspace { get; set; } = null!;
     public ICollection<File> Attachments { get; init; } = new List<File>();
+    public string? CustomFields { get; set; }
 }

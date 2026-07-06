@@ -32,6 +32,8 @@ public sealed class AppDbContext : DbContext, IUnitOfWork
     public DbSet<Note> Notes => Set<Note>();
     public DbSet<TaskItemEntity> TaskItems => Set<TaskItemEntity>();
     public DbSet<TimelineActivity> TimelineActivities => Set<TimelineActivity>();
+    public DbSet<CustomFieldDefinition> CustomFieldDefinitions => Set<CustomFieldDefinition>();
+    public DbSet<RecordRelation> RecordRelations => Set<RecordRelation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

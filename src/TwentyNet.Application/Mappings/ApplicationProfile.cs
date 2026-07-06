@@ -1,7 +1,9 @@
 using AutoMapper;
 using TwentyNet.Application.Companies;
 using TwentyNet.Application.ConnectedAccounts;
+using TwentyNet.Application.CustomFields;
 using TwentyNet.Application.Files;
+using TwentyNet.Application.RecordRelations;
 using TwentyNet.Application.Notes;
 using TwentyNet.Application.People;
 using TwentyNet.Application.Tasks;
@@ -11,6 +13,8 @@ using TwentyNet.Application.Webhooks;
 using TwentyNet.Application.Workspaces;
 using CompanyEntity = TwentyNet.Domain.Entities.Company;
 using ConnectedAccountEntity = TwentyNet.Domain.Entities.ConnectedAccount;
+using CustomFieldDefinitionEntity = TwentyNet.Domain.Entities.CustomFieldDefinition;
+using RecordRelationEntity = TwentyNet.Domain.Entities.RecordRelation;
 using FileEntity = TwentyNet.Domain.Entities.File;
 using NoteEntity = TwentyNet.Domain.Entities.Note;
 using PersonEntity = TwentyNet.Domain.Entities.Person;
@@ -42,5 +46,7 @@ public sealed class ApplicationProfile : Profile
         CreateMap<NoteEntity, NoteDto>();
         CreateMap<TaskItemEntity, TaskDto>();
         CreateMap<TimelineActivityEntity, TimelineActivityDto>();
+        CreateMap<CustomFieldDefinitionEntity, CustomFieldDefinitionDto>();
+        CreateMap<RecordRelationEntity, RecordRelationDto>();
     }
 }

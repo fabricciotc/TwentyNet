@@ -18,6 +18,9 @@ public sealed class CompanyConfiguration : IEntityTypeConfiguration<Company>
         builder.HasIndex(x => x.WorkspaceId);
         builder.HasIndex(x => x.DomainName);
 
+        builder.Property(x => x.CustomFields)
+            .HasColumnType("jsonb");
+
         builder.HasMany(x => x.People)
             .WithOne(p => p.Company)
             .HasForeignKey(p => p.CompanyId)

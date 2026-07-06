@@ -1,3 +1,4 @@
+using System.Text.Json;
 using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -10,6 +11,7 @@ using TwentyNet.Application.People.DeletePerson;
 using TwentyNet.Application.People.GetPersonById;
 using TwentyNet.Application.People.ListPeople;
 using TwentyNet.Application.People.UpdatePerson;
+using TwentyNet.Application.People.UpdatePersonCustomFields;
 using TwentyNet.Contracts.Common;
 using TwentyNet.Contracts.Files;
 using TwentyNet.Contracts.People;
@@ -116,5 +118,12 @@ public sealed class PeopleController : ControllerBase
     {
         var result = await _sender.Send(new ListPersonFilesQuery(id), cancellationToken);
         return Ok(_mapper.Map<IReadOnlyList<FileResponse>>(result));
+    }
+
+    [HttpPut("{id:guid}/custom-fields")]
+    public async Task<IActionResult> UpdateCustomFields(Guid id, [FromBody] Dictionary<string, JsonElement> customFields, CancellationToken cancellationToken)
+    {
+        await _sender.Send(new UpdatePersonCustomFieldsCommand(id, customFields), cancellationToken);
+        return NoContent();
     }
 }

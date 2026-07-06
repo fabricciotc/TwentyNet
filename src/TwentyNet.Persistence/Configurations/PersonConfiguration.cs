@@ -30,6 +30,9 @@ public sealed class PersonConfiguration : IEntityTypeConfiguration<Person>
         builder.HasIndex(x => x.WorkspaceId);
         builder.HasIndex(x => x.CompanyId);
 
+        builder.Property(x => x.CustomFields)
+            .HasColumnType("jsonb");
+
         builder.HasMany(x => x.Attachments)
             .WithOne(f => f.Person)
             .HasForeignKey(f => f.PersonId)

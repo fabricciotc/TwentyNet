@@ -1,3 +1,4 @@
+using System.Text.Json;
 using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -8,6 +9,7 @@ using TwentyNet.Application.Companies.DeleteCompany;
 using TwentyNet.Application.Companies.GetCompanyById;
 using TwentyNet.Application.Companies.ListCompanies;
 using TwentyNet.Application.Companies.UpdateCompany;
+using TwentyNet.Application.Companies.UpdateCompanyCustomFields;
 using TwentyNet.Application.Files.AttachFileToCompany;
 using TwentyNet.Application.Files.ListCompanyFiles;
 using TwentyNet.Contracts.Common;
@@ -103,5 +105,12 @@ public sealed class CompaniesController : ControllerBase
     {
         var result = await _sender.Send(new ListCompanyFilesQuery(id), cancellationToken);
         return Ok(_mapper.Map<IReadOnlyList<FileResponse>>(result));
+    }
+
+    [HttpPut("{id:guid}/custom-fields")]
+    public async Task<IActionResult> UpdateCustomFields(Guid id, [FromBody] Dictionary<string, JsonElement> customFields, CancellationToken cancellationToken)
+    {
+        await _sender.Send(new UpdateCompanyCustomFieldsCommand(id, customFields), cancellationToken);
+        return NoContent();
     }
 }
