@@ -23,12 +23,33 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseDefaultFiles();
-app.UseStaticFiles();
+
+var frontendPath = Path.Combine(app.Environment.ContentRootPath, "Frontend");
+if (Directory.Exists(frontendPath))
+{
+    var frontendFileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(frontendPath);
+
+    app.UseDefaultFiles(new DefaultFilesOptions
+    {
+        FileProvider = frontendFileProvider,
+        RequestPath = ""
+    });
+
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = frontendFileProvider,
+        RequestPath = ""
+    });
+
+    app.MapFallbackToFile("index.html", new StaticFileOptions
+    {
+        FileProvider = frontendFileProvider
+    });
+}
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<WorkspaceHub>("/hubs/workspace");
-app.MapFallbackToFile("Frontend/index.html");
 
 app.Run();
